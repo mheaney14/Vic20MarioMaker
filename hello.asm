@@ -1,12 +1,12 @@
 tokenized:
-	'PRINT' = $99
+	PRINT "sys 4352"
 	
-	sys = ? (58($9e))
-	mem = ?
+
 
 	processor 6502
 	org	$1100
 	
+
 	
 start:	
 	jsr	$e55f
