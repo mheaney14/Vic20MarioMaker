@@ -241,12 +241,18 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jmp end
 
 dKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'1
+	jsr CHROUT
 	lda $0111
 	cmp #255
 	beq dKeyDown
-	ldy $0111
-	lda #1
-	sta 38400,y
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -264,23 +270,29 @@ dKeyDown:
 	lda $0112
 	cmp #255
 	beq jumpToDrawing
-	ldy $0112
-	lda #1
-	sta 38400+255,y
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
 	jmp darwing
 
 wKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'1
+	jsr CHROUT
 	ldx #0
 wKey1:
 	lda $0112
 	cmp #0
 	beq wKey2
-	ldy $0112
-	lda #1
-	sta 38400+255,y
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -289,9 +301,9 @@ wKey2:
 	lda $0111
 	cmp #0
 	beq wkeyEnd
-	ldy $0111
-	lda #1
-	sta 38400,y
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -306,12 +318,18 @@ jumpToDrawing:
 	rts
 
 aKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'1
+	jsr CHROUT
 	lda $0112
 	cmp #0
 	beq aKeyUp
-	ldy $0112
-	lda #1
-	sta 38400+255,y
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -320,9 +338,9 @@ aKeyUp:
 	lda $0111
 	cmp #0
 	beq darwing
-	ldy $0111
-	lda #1
-	sta 38400,y
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -330,14 +348,20 @@ aKeyUp:
 
 ; offset is 242 to make it correctly
 sKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'1
+	jsr CHROUT
 	ldx #0
 sKey1:
 	lda $0111
 	cmp #255
 	beq sKey2
-	ldy $0111
-	lda #1
-	sta 38400,y
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -346,9 +370,9 @@ sKey2:
 	lda $0112
 	cmp #255
 	beq sKeyEnd
-	ldy $0112
-	lda #1
-	sta 38400+255,y
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -357,8 +381,6 @@ sKeyEnd:
 	beq darwing
 	inx
 	jmp sKey1
-
-
 
 sound:
 	lda #168
@@ -371,14 +393,26 @@ darwing:
 	lda $0112
 	cmp #0
 	bne darwingCurrentBlockDown
+	; ldx $0111		; position
+	; lda $0110		; item type
+	; sta 38400,x
 	ldx $0111
-	lda $0110
-	sta 38400,x
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'@
+	jsr CHROUT
 	jmp sound
 darwingCurrentBlockDown:
+	; ldx $0112
+	; lda $0110
+	; sta 38400+255,x
+	ldx $0111
+	stx $D1
 	ldx $0112
-	lda $0110
-	sta 38400+255,x
+	stx $D3
+	lda #'@
+	jsr CHROUT
 	jmp sound
 
 printEndGameMessage:				;Print end game message
