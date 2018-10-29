@@ -8,19 +8,18 @@
 basicend	
 	dc.w 0	;end of basic program
 
-;	jsr $e55f						; clear screen
 	lda #28
 	sta $34
-	sta $36			; the above 4 lines cause memory not to be used for code (used for storing 64 new characters)
+	sta $36			; the above 3 lines cause memory not to be used for code (used for storing 64 new characters)
 	
 	; this stores the regular set of characters, we can then swap new ones in their places
-	; for x = $0 to $199 get from $8000+x, store at $1C00+x
+	; for x = $0 to $7F get from $8000+x, store at $1C00+x
 	ldx $0
 loadChar:
 	lda $8000,X		; load x from ROM
 	sta $1C00,X		; store previous char in RAM
 	inx				; increment x
-	cpx $200		; if x < $200 then do loop again
+	cpx #$40		; if x < $80 then do loop again
 	bne loadChar
 	
 	lda #$FF
@@ -29,6 +28,42 @@ loadChar:
 ;******************* Start of Graphics *******************
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
+
+;******************* letter H *******************
+	lda #$42		; replaces 'H (doesn't work for some reason??)
+	sta $1C40
+	lda #$42
+	sta $1C41
+	lda #$42
+	sta $1C42
+	lda #$7E
+	sta $1C43
+	lda #$42
+	sta $1C44
+	lda #$42
+	sta $1C45
+	lda #$42
+	sta $1C46
+	lda #$00
+	sta $1C47
+
+;******************* letter I *******************
+	lda #$1C		; replaces 'I (doesn't work for some reason??)
+	sta $1C48
+	lda #$08
+	sta $1C49
+	lda #$08
+	sta $1C4A
+	lda #$08
+	sta $1C4B
+	lda #$08
+	sta $1C4C
+	lda #$08
+	sta $1C4D
+	lda #$1C
+	sta $1C4E
+	lda #$00
+	sta $1C4F
 
 ;******************* Mario Character *******************
 	lda #$3C		; start of mario character (top of head)
@@ -193,57 +228,8 @@ loadChar:
 	jsr $FFD2		; print char in accumulator
 	lda #'?			; load question block
 	jsr $FFD2		; print char in accumulator
-	lda #'a
-	jsr $FFD2
-	lda #'b
-	jsr $FFD2
-	lda #'c
-	jsr $FFD2
-	lda #'d
-	jsr $FFD2
-	lda #'e
-	jsr $FFD2
-	lda #'f
-	jsr $FFD2
-	lda #'g
-	jsr $FFD2
-	lda #'h
-	jsr $FFD2
-	lda #'i
-	jsr $FFD2
-	lda #'j
-	jsr $FFD2
-	lda #'k
-	jsr $FFD2
-	lda #'l
-	jsr $FFD2
-	lda #'m
-	jsr $FFD2
-	lda #'n
-	jsr $FFD2
-	lda #'o
-	jsr $FFD2
-	lda #'p
-	jsr $FFD2
-	lda #'q
-	jsr $FFD2
-	lda #'r
-	jsr $FFD2
-	lda #'s
-	jsr $FFD2
-	lda #'t
-	jsr $FFD2
-	lda #'u
-	jsr $FFD2
-	lda #'v
-	jsr $FFD2
-	lda #'w
-	jsr $FFD2
-	lda #'x
-	jsr $FFD2
-	lda #'y
-	jsr $FFD2
-	lda #'z
+
+	lda #' 
 	jsr $FFD2
 	lda #'A
 	jsr $FFD2
@@ -297,6 +283,8 @@ loadChar:
 	jsr $FFD2
 	lda #'Z
 	jsr $FFD2
+	lda #' 
+	jsr $FFD2
 	lda #'0
 	jsr $FFD2
 	lda #'1
@@ -321,3 +309,55 @@ loadChar:
 endLoop:
 	jmp endLoop
 	
+	lda #'a
+	jsr $FFD2
+	lda #'b
+	jsr $FFD2
+	lda #'c
+	jsr $FFD2
+	lda #'d
+	jsr $FFD2
+	lda #'e
+	jsr $FFD2
+	lda #'f
+	jsr $FFD2
+	lda #'g
+	jsr $FFD2
+	lda #'h
+	jsr $FFD2
+	lda #'i
+	jsr $FFD2
+	lda #'j
+	jsr $FFD2
+	lda #'k
+	jsr $FFD2
+	lda #'l
+	jsr $FFD2
+	lda #'m
+	jsr $FFD2
+	lda #'n
+	jsr $FFD2
+	lda #'o
+	jsr $FFD2
+	lda #'p
+	jsr $FFD2
+	lda #'q
+	jsr $FFD2
+	lda #'r
+	jsr $FFD2
+	lda #'s
+	jsr $FFD2
+	lda #'t
+	jsr $FFD2
+	lda #'u
+	jsr $FFD2
+	lda #'v
+	jsr $FFD2
+	lda #'w
+	jsr $FFD2
+	lda #'x
+	jsr $FFD2
+	lda #'y
+	jsr $FFD2
+	lda #'z
+	jsr $FFD2
