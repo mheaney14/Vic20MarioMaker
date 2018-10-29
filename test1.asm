@@ -16,9 +16,9 @@
 
 ;	dc.w " "	;space between sys and memory location (?)
 	dc.w 1234
-	dc.b $9e, " "	;sys instruction
+	dc.b $9e, "4109"	;sys instruction
 	;dc.w 4361	;memory address where assembly starts (org + size of everthing loaded)
-	dc.w 4107
+	;dc.w 4107
 	dc.b 0
 	
 ;	dc.w 0		;0 to terminate instruction
