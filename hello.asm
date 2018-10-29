@@ -1,5 +1,6 @@
-CHROUT	= $FFD2
-CHRIN	= $FFE4
+CHROUT		= $FFD2
+CHRIN		= $FFE4
+CLEARSCREEN = $E55F
 
 	processor 6502
 	org $1001
@@ -12,7 +13,6 @@ basicend
 		dc.w 0	;end of basic program
 		
 
-;	jsr $e55f						; clear screen
 	lda #28
 	sta 52
 	lda #28
@@ -28,7 +28,6 @@ loadChar:
 	cpx $200		; if x < $200 then do loop again
 	bne loadChar
 	
-	ldx $9005
 	lda #$FF
 	sta $9005		; characters are stored at $1C00 - $1DFF and use 8 bytes of memory each
 
@@ -184,13 +183,14 @@ loadChar:
 
 	; jsr $e55f		; clear screen
 start:		
-	jsr $E55F
+	jsr CLEARSCREEN
     lda #0        ; screen and border colors
     sta $900F
 	lda #1			;Set the background of the character to white
 	sta $286		;Store it in $286 memory
 
 	ldx #0
+	ldy #0
 cll:
     lda #32+128
     sta 7680,x      ; screen memory
@@ -199,24 +199,148 @@ cll:
     bne cll
 
 	lda #'@			; load mario
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'[			; load koopa1
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #']			; load koopa2
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'"			; load goomba
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'&			; load block
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'#			; load box
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'$			; load coin block
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 	lda #'?			; load question block
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
 
+main:
+	lda #0
+	jsr	CHRIN		;accept user input for test number 
+	; cmp #'W			; Branch to the coressponding key
+	; beq wKey
+	cmp #'A
+	beq aKey
+	; cmp #'S
+	; beq sKey
+	cmp #'D
+	beq dKey
+	cmp #'Q
+	beq qKey
+	jmp main		; If there is no input
+
+sound:
+	lda #168
+	sta $900c		; -- effect sound if input
+	lda #0
+	sta $900c
+	jmp	main
+mainEnd:
+	jsr CLEARSCREEN
+	jmp end
+
+
+; wKey:
+; 	lda $0112
+; 	cmp #0
+; 	bne wKeyDown
+; 	lda $0111
+; 	cmp #0
+; 	beq darwing
+; 	sbc #21
+; 	sta $0111
+; 	jmp darwing
+; wKeyDown:
+; 	lda $0112
+; 	sbc #21
+; 	sta $0112
+; 	jmp darwing
+
+aKey:								;Character move left upper half of the screen
+	lda $0112
+	cmp #0
+	bne aKeyDown
+	lda $0111
+	cmp #0
+	beq darwing
+	sbc #1
+	sta $0111
+	jmp darwing
+aKeyDown:							;Move left lower half of the screen
+	lda $0112
+	sbc #1
+	sta $0112
+	jmp darwing
+
+; sKey:
+; 	lda $0111
+; 	adc #21
+; 	bcs sKeyDown
+; 	sta $0111
+; 	jmp darwing
+; sKeyDown:
+; 	lda $0112
+; 	adc #21
+; 	bcs darwing
+; 	sta $0112
+; 	jmp darwing
+
+dKey:						;Move right upper half of the screen
+	lda $0111
+	cmp #255
+	beq dKeyDown
+	adc #1
+	sta $0111
+	jmp darwing
+dKeyDown:					;Move right if character is at bottom half of the screen
+	lda $0112
+	cmp #255
+	beq darwing
+	adc #1
+	sta $0112
+	jmp darwing
+
+qKey:						;When user hit Q, quit the game and print end game message
+	jsr CLEARSCREEN
+	LDY $0
+	jmp printEndGameMessage
+	jmp end
+
+
+
+darwing:							;Drawing the top half of the screen
+	lda $0112
+	cmp #0
+	bne darwingCurrentBlockDown
+	ldx $0111
+	lda $0110
+	sta 38400,x
+	jmp sound
+
+
+darwingCurrentBlockDown:			;Draw when the character is in the bottom half
+	ldx $0112
+	lda $0110
+	sta 38400+255,x
+	jmp sound
+
+printEndGameMessage:				;Print end game message
+	LDA endGameMessage,Y
+	CMP #0
+	BEQ endPrintEndGameMessage
+	JSR	CHROUT
+	INY 
+	jmp printEndGameMessage
+endPrintEndGameMessage:
+	rts
 
 
 end:
 	jmp end
 	rts
+
+
+endGameMessage:
+	.byte "END GAME", 0
+
