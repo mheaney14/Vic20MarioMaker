@@ -1,6 +1,5 @@
 CHROUT	= $FFD2
 CHRIN	= $FFE4
-VIC 	= $9000
 
 	processor 6502
 	org $1001
