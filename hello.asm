@@ -266,7 +266,7 @@ dKeyDown:
 	beq jumpToDrawing
 	ldy $0112
 	lda #1
-	sta 38400,y
+	sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -280,7 +280,7 @@ wKey1:
 	beq wKey2
 	ldy $0112
 	lda #1
-	sta 38400,y
+	sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -311,7 +311,7 @@ aKey:
 	beq aKeyUp
 	ldy $0112
 	lda #1
-	sta 38400,y
+	sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -348,7 +348,7 @@ sKey2:
 	beq sKeyEnd
 	ldy $0112
 	lda #1
-	sta 38400,y
+	sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -367,20 +367,15 @@ sound:
 	sta $900c
 	jmp	main
 
-darwing:							;Drawing the top half of the screen
+darwing:
 	lda $0112
+	cmp #0
 	bne darwingCurrentBlockDown
 	ldx $0111
-	stx	$D1
 	lda $0110
-	sta	$D3
-	lda	#'@
-	jsr	CHROUT
-	; sta 38400,x
+	sta 38400,x
 	jmp sound
-
-
-darwingCurrentBlockDown:			;Draw when the character is in the bottom half
+darwingCurrentBlockDown:
 	ldx $0112
 	lda $0110
 	sta 38400+255,x
