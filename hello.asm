@@ -221,9 +221,9 @@ main:
 	cmp #'W			; Branch to the coressponding key
 	beq wKey
 	cmp #'A
-	beq aKey
+	beq jumpToAKey
 	cmp #'S
-	beq sKey
+	beq jumpToSKey
 	cmp #'D
 	beq dKey
 	cmp #'Q
@@ -244,14 +244,30 @@ dKey:
 	lda $0111
 	cmp #255
 	beq dKeyDown
+	ldy $0111
+	lda #1
+	sta 38400,y
+	lda $0111
 	adc #1
 	sta $0111
 	jmp darwing
-	
+
+jumpToAKey:
+	jmp aKey
+	rts
+
+jumpToSKey:
+	jmp	sKey
+	rts
+
 dKeyDown:
 	lda $0112
 	cmp #255
-	beq darwing
+	beq jumpToDrawing
+	ldy $0112
+	lda #1
+	sta 38400,y
+	lda $0112
 	adc #1
 	sta $0112
 	jmp darwing
@@ -262,6 +278,10 @@ wKey1:
 	lda $0112
 	cmp #0
 	beq wKey2
+	ldy $0112
+	lda #1
+	sta 38400,y
+	lda $0112
 	sbc #1
 	sta $0112
 	jmp wkeyEnd
@@ -269,18 +289,30 @@ wKey2:
 	lda $0111
 	cmp #0
 	beq wkeyEnd
+	ldy $0111
+	lda #1
+	sta 38400,y
+	lda $0111
 	sbc #1
 	sta $0111
 wkeyEnd:
 	cpx #21
-	beq darwing
+	beq jumpToDrawing
 	inx 
 	jmp wKey1
+
+jumpToDrawing:
+	jmp darwing
+	rts
 
 aKey:
 	lda $0112
 	cmp #0
 	beq aKeyUp
+	ldy $0112
+	lda #1
+	sta 38400,y
+	lda $0112
 	sbc #1
 	sta $0112
 	jmp darwing
@@ -288,6 +320,10 @@ aKeyUp:
 	lda $0111
 	cmp #0
 	beq darwing
+	ldy $0111
+	lda #1
+	sta 38400,y
+	lda $0111
 	sbc #1
 	sta $0111
 	jmp darwing
@@ -299,6 +335,10 @@ sKey1:
 	lda $0111
 	cmp #255
 	beq sKey2
+	ldy $0111
+	lda #1
+	sta 38400,y
+	lda $0111
 	adc #1
 	sta $0111
 	jmp sKeyEnd
@@ -306,6 +346,10 @@ sKey2:
 	lda $0112
 	cmp #255
 	beq sKeyEnd
+	ldy $0112
+	lda #1
+	sta 38400,y
+	lda $0112
 	adc #1
 	sta $0112
 sKeyEnd:
@@ -326,10 +370,13 @@ sound:
 darwing:							;Drawing the top half of the screen
 	lda $0112
 	bne darwingCurrentBlockDown
-	;Delete the character
 	ldx $0111
+	stx	$D1
 	lda $0110
-	sta 38400,x
+	sta	$D3
+	lda	#'@
+	jsr	CHROUT
+	; sta 38400,x
 	jmp sound
 
 
@@ -357,4 +404,3 @@ end:
 
 endGameMessage:
 	.byte "END GAME", 0
-
