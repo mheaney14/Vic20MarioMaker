@@ -3,7 +3,7 @@
 	
 	;.segment	"BASIC"
 	processor 6502
-	org $1100	
+	org $1001	
 ;	.word	RUN
 	
 ;RUN:	.word	@end
@@ -13,12 +13,15 @@
 
 	
 	
-	dc.w 4362	;memory address where assembly starts (org + size of everthing loaded)
-	dc.w " "	;space between sys and memory location (?)
-	dc.b $9e	;sys instruction
 
-
-	dc.w 0		;0 to terminate instruction
+;	dc.w " "	;space between sys and memory location (?)
+	dc.w 1234
+	dc.b $9e, " "	;sys instruction
+	;dc.w 4361	;memory address where assembly starts (org + size of everthing loaded)
+	dc.w 4107
+	dc.b 0
+	
+;	dc.w 0		;0 to terminate instruction
 	
 	
 ;	.byte	<(MAIN / 1000 .mod 10) + $30
@@ -31,7 +34,7 @@
 ;	.segment "STARTUP"
 
 basicend	
-		dc.b 0	;end of basic program
+		dc.w 0	;end of basic program
 
 
 
@@ -65,5 +68,3 @@ MAIN:
 end:
 	rts
 	
-start:
-	rts
