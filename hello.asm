@@ -198,108 +198,41 @@ cll:
     dex
     bne cll
 
-	lda #'@			; load mario
-	jsr CHROUT		; print char in accumulator
-	lda #'[			; load koopa1
-	jsr CHROUT		; print char in accumulator
-	lda #']			; load koopa2
-	jsr CHROUT		; print char in accumulator
-	lda #'"			; load goomba
-	jsr CHROUT		; print char in accumulator
-	lda #'&			; load block
-	jsr CHROUT		; print char in accumulator
-	lda #'#			; load box
-	jsr CHROUT		; print char in accumulator
-	lda #'$			; load coin block
-	jsr CHROUT		; print char in accumulator
-	lda #'?			; load question block
-	jsr CHROUT		; print char in accumulator
+	; lda #'@			; load mario
+	; jsr CHROUT		; print char in accumulator
+	; lda #'[			; load koopa1
+	; jsr CHROUT		; print char in accumulator
+	; lda #']			; load koopa2
+	; jsr CHROUT		; print char in accumulator
+	; lda #'"			; load goomba
+	; jsr CHROUT		; print char in accumulator
+	; lda #'&			; load block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'#			; load box
+	; jsr CHROUT		; print char in accumulator
+	; lda #'$			; load coin block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'?			; load question block
+	; jsr CHROUT		; print char in accumulator
 
 main:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
-	; cmp #'W			; Branch to the coressponding key
-	; beq wKey
+	cmp #'W			; Branch to the coressponding key
+	beq wKey
 	cmp #'A
 	beq aKey
-	; cmp #'S
-	; beq sKey
+	cmp #'S
+	beq sKey
 	cmp #'D
 	beq dKey
 	cmp #'Q
 	beq qKey
 	jmp main		; If there is no input
 
-sound:
-	lda #168
-	sta $900c		; -- effect sound if input
-	lda #0
-	sta $900c
-	jmp	main
 mainEnd:
 	jsr CLEARSCREEN
 	jmp end
-
-
-; wKey:
-; 	lda $0112
-; 	cmp #0
-; 	bne wKeyDown
-; 	lda $0111
-; 	cmp #0
-; 	beq darwing
-; 	sbc #21
-; 	sta $0111
-; 	jmp darwing
-; wKeyDown:
-; 	lda $0112
-; 	sbc #21
-; 	sta $0112
-; 	jmp darwing
-
-aKey:								;Character move left upper half of the screen
-	lda $0112
-	cmp #0
-	bne aKeyDown
-	lda $0111
-	cmp #0
-	beq darwing
-	sbc #1
-	sta $0111
-	jmp darwing
-aKeyDown:							;Move left lower half of the screen
-	lda $0112
-	sbc #1
-	sta $0112
-	jmp darwing
-
-; sKey:
-; 	lda $0111
-; 	adc #21
-; 	bcs sKeyDown
-; 	sta $0111
-; 	jmp darwing
-; sKeyDown:
-; 	lda $0112
-; 	adc #21
-; 	bcs darwing
-; 	sta $0112
-; 	jmp darwing
-
-dKey:						;Move right upper half of the screen
-	lda $0111
-	cmp #255
-	beq dKeyDown
-	adc #1
-	sta $0111
-	jmp darwing
-dKeyDown:					;Move right if character is at bottom half of the screen
-	lda $0112
-	cmp #255
-	beq darwing
-	adc #1
-	sta $0112
-	jmp darwing
 
 qKey:						;When user hit Q, quit the game and print end game message
 	jsr CLEARSCREEN
@@ -307,12 +240,93 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jmp printEndGameMessage
 	jmp end
 
+dKey:
+	lda $0111
+	cmp #255
+	beq dKeyDown
+	adc #1
+	sta $0111
+	jmp darwing
+	
+dKeyDown:
+	lda $0112
+	cmp #255
+	beq darwing
+	adc #1
+	sta $0112
+	jmp darwing
 
+wKey:
+	ldx #0
+wKey1:
+	lda $0112
+	cmp #0
+	beq wKey2
+	sbc #1
+	sta $0112
+	jmp wkeyEnd
+wKey2:
+	lda $0111
+	cmp #0
+	beq wkeyEnd
+	sbc #1
+	sta $0111
+wkeyEnd:
+	cpx #21
+	beq darwing
+	inx 
+	jmp wKey1
+
+aKey:
+	lda $0112
+	cmp #0
+	beq aKeyUp
+	sbc #1
+	sta $0112
+	jmp darwing
+aKeyUp:
+	lda $0111
+	cmp #0
+	beq darwing
+	sbc #1
+	sta $0111
+	jmp darwing
+
+; offset is 242 to make it correctly
+sKey:
+	ldx #0
+sKey1:
+	lda $0111
+	cmp #255
+	beq sKey2
+	adc #1
+	sta $0111
+	jmp sKeyEnd
+sKey2:
+	lda $0112
+	cmp #255
+	beq sKeyEnd
+	adc #1
+	sta $0112
+sKeyEnd:
+	cpx #21
+	beq darwing
+	inx
+	jmp sKey1
+
+
+
+sound:
+	lda #168
+	sta $900c		; -- effect sound if input
+	lda #0
+	sta $900c
+	jmp	main
 
 darwing:							;Drawing the top half of the screen
 	lda $0112
-	cmp #0
 	bne darwingCurrentBlockDown
+	;Delete the character
 	ldx $0111
 	lda $0110
 	sta 38400,x
