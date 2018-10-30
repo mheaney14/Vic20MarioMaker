@@ -29,6 +29,186 @@ loadChar:
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
 
+;******************* number 0 *******************
+	lda #$3C		; replaces '0 (doesn't work for some reason??)
+	sta $1D80
+	lda #$42
+	sta $1D81
+	lda #$46
+	sta $1D82
+	lda #$5A
+	sta $1D83
+	lda #$62
+	sta $1D84
+	lda #$42
+	sta $1D85
+	lda #$3C
+	sta $1D86
+	lda #$00
+	sta $1D87
+
+;******************* number 1 *******************
+	lda #$08		; replaces '1 (doesn't work for some reason??)
+	sta $1D88
+	lda #$18
+	sta $1D89
+	lda #$28
+	sta $1D8A
+	lda #$08
+	sta $1D8B
+	lda #$08
+	sta $1D8C
+	lda #$08
+	sta $1D8D
+	lda #$3E
+	sta $1D8E
+	lda #$00
+	sta $1D8F
+
+;******************* number 2 *******************
+	lda #$3C		; replaces '2 (doesn't work for some reason??)
+	sta $1D90
+	lda #$42
+	sta $1D91
+	lda #$02
+	sta $1D92
+	lda #$0C
+	sta $1D93
+	lda #$30
+	sta $1D94
+	lda #$40
+	sta $1D95
+	lda #$7E
+	sta $1D96
+	lda #$00
+	sta $1D97
+
+;******************* number 3 *******************
+	lda #$3C		; replaces '3 (doesn't work for some reason??)
+	sta $1D98
+	lda #$42
+	sta $1D99
+	lda #$02
+	sta $1D9A
+	lda #$1C
+	sta $1D9B
+	lda #$02
+	sta $1D9C
+	lda #$42
+	sta $1D9D
+	lda #$3C
+	sta $1D9E
+	lda #$00
+	sta $1D9F
+
+;******************* number 4 *******************
+	lda #$04		; replaces '4 (doesn't work for some reason??)
+	sta $1DA0
+	lda #$0C
+	sta $1DA1
+	lda #$14
+	sta $1DA2
+	lda #$24
+	sta $1DA3
+	lda #$7E
+	sta $1DA4
+	lda #$04
+	sta $1DA5
+	lda #$04
+	sta $1DA6
+	lda #$00
+	sta $1DA7
+
+;******************* number 5 *******************
+	lda #$7E		; replaces '5 (doesn't work for some reason??)
+	sta $1DA8
+	lda #$40
+	sta $1DA9
+	lda #$78
+	sta $1DAA
+	lda #$04
+	sta $1DAB
+	lda #$02
+	sta $1DAC
+	lda #$44
+	sta $1DAD
+	lda #$38
+	sta $1DAE
+	lda #$00
+	sta $1DAF
+
+;******************* number 6 *******************
+	lda #$1C		; replaces '6 (doesn't work for some reason??)
+	sta $1DB0
+	lda #$20
+	sta $1DB1
+	lda #$40
+	sta $1DB2
+	lda #$7C
+	sta $1DB3
+	lda #$42
+	sta $1DB4
+	lda #$42
+	sta $1DB5
+	lda #$3C
+	sta $1DB6
+	lda #$00
+	sta $1DB7
+
+;******************* number 7 *******************
+	lda #$7E		; replaces '7 (doesn't work for some reason??)
+	sta $1DB8
+	lda #$42
+	sta $1DB9
+	lda #$04
+	sta $1DBA
+	lda #$08
+	sta $1DBB
+	lda #$10
+	sta $1DBC
+	lda #$10
+	sta $1DBD
+	lda #$10
+	sta $1DBE
+	lda #$00
+	sta $1DBF
+
+;******************* number 8 *******************
+	lda #$3C		; replaces '8 (doesn't work for some reason??)
+	sta $1DC0
+	lda #$42
+	sta $1DC1
+	lda #$42
+	sta $1DC2
+	lda #$3C
+	sta $1DC3
+	lda #$42
+	sta $1DC4
+	lda #$42
+	sta $1DC5
+	lda #$3C
+	sta $1DC6
+	lda #$00
+	sta $1DC7
+
+;******************* number 9 *******************
+	lda #$3C		; replaces '9 (doesn't work for some reason??)
+	sta $1DC8
+	lda #$42
+	sta $1DC9
+	lda #$42
+	sta $1DCA
+	lda #$3E
+	sta $1DCB
+	lda #$02
+	sta $1DCC
+	lda #$04
+	sta $1DCD
+	lda #$38
+	sta $1DCE
+	lda #$00
+	sta $1DCF
+
 ;******************* letter H *******************
 	lda #$42		; replaces 'H (doesn't work for some reason??)
 	sta $1C40
