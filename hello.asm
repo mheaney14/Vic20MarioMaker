@@ -219,28 +219,93 @@ main:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
-	beq wKey
+	beq jumpToWKey
 	cmp #'A
 	beq jumpToAKey
 	cmp #'S
 	beq jumpToSKey
 	cmp #'D
-	beq dKey
+	beq jumpToDKey
 	cmp #'Q
-	beq qKey
+	beq jumpToQKey
+	cmp #'N
+	beq jumpToNKey
 	jmp main		; If there is no input
 
 mainEnd:
 	jsr CLEARSCREEN
 	jmp end
 
+jumpToWKey:
+	lda #1
+	sta $0101
+	jmp jmpEnd
+jumpToAKey:
+	lda #2
+	sta $0101
+	jmp jmpEnd
+jumpToSKey:
+	lda #3
+	sta $0101
+	jmp jmpEnd
+jumpToDKey:
+	lda #4
+	sta $0101
+	jmp jmpEnd
+jumpToQKey:
+	lda #5
+	sta $0101
+	jmp jmpEnd
+jumpToNKey:
+	lda #6
+	sta $0101
+	jmp jmpEnd
+jmpEnd:
+
+nKey:
+	ldy $0101
+	cpy #6
+	bne qKey
+	ldy #0
+	lda $0113
+	adc #1
+	sta $0113
+	ldx $0113
+nKeyIncrease:
+	inx
+	iny
+	iny
+	iny
+	cpx $0113
+	bne nKeyIncrease
+	lda $0110
+	sta $0113,y
+	iny 
+	lda $0111
+	sta $0113,y
+	iny
+	lda $0112
+	sta $0113,y
+	lda #0
+	sta $0110
+	lda #0
+	sta $0111
+	lda #0
+	sta $0112
+
 qKey:						;When user hit Q, quit the game and print end game message
+	ldy $0101
+	cpy #5
+	bne dKey
 	jsr CLEARSCREEN
 	LDY $0
 	jmp printEndGameMessage
 	jmp end
 
 dKey:
+	ldy $0101
+	cpy #4
+	bne wKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -257,15 +322,6 @@ dKey:
 	adc #1
 	sta $0111
 	jmp darwing
-
-jumpToAKey:
-	jmp aKey
-	rts
-
-jumpToSKey:
-	jmp	sKey
-	rts
-
 dKeyDown:
 	lda $0112
 	cmp #255
@@ -279,6 +335,9 @@ dKeyDown:
 	jmp darwing
 
 wKey:
+	ldy $0101
+	cpy #1
+	bne aKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -318,6 +377,9 @@ jumpToDrawing:
 	rts
 
 aKey:
+	ldy $0101
+	cpy #2
+	bne sKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -348,6 +410,9 @@ aKeyUp:
 
 ; offset is 242 to make it correctly
 sKey:
+	ldy $0101
+	cpy #3
+	bne sound
 	ldx $0111
 	stx $D1
 	ldx $0112
