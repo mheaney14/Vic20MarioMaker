@@ -265,7 +265,7 @@ jmpEnd:
 nKey:
 	ldy $0101
 	cpy #6
-	bne qKey
+	bne nkeyInput
 	ldy #0
 	lda $0113
 	adc #1
@@ -292,6 +292,50 @@ nKeyIncrease:
 	sta $0111
 	lda #0
 	sta $0112
+	; get input for the item index
+nkeyInput:
+	ldy $0101
+	cpy #6
+	bne qKey
+	lda #0
+	jsr	CHRIN
+	cmp #'1
+	beq Key1
+	cmp #'2
+	beq Key2
+	cmp #'3
+	beq Key3
+	cmp #'4
+	beq Key4
+	cmp #'5
+	beq Key5
+	cmp #'6
+	beq Key6
+Key1:
+	lda #1
+	sta $0110
+	jmp nKeyEnd
+Key2:
+	lda #2
+	sta $0110
+	jmp nKeyEnd
+Key3:
+	lda #3
+	sta $0110
+	jmp nKeyEnd
+Key4:
+	lda #4
+	sta $0110
+	jmp nKeyEnd
+Key5:
+	lda #5
+	sta $0110
+	jmp nKeyEnd
+Key6:
+	lda #6
+	sta $0110
+nKeyEnd:
+	jmp main
 
 qKey:						;When user hit Q, quit the game and print end game message
 	ldy $0101
