@@ -1,7 +1,3 @@
-CHROUT		= $FFD2
-CHRIN		= $FFE4
-CLEARSCREEN = $E55F
-
 	processor 6502
 	org $1001
 
@@ -10,8 +6,7 @@ CLEARSCREEN = $E55F
 	dc.b $9e, "4109"	;sys instruction and memory location
 	dc.b 0				; end of instruction
 basicend	
-		dc.w 0	;end of basic program
-		
+	dc.w 0	;end of basic program
 
 	lda #28
 	sta $34
@@ -396,364 +391,153 @@ loadChar:
 
 ;******************* End of Graphics *******************
 
-	; jsr $e55f		; clear screen
-start:		
-	jsr CLEARSCREEN
-    lda #0        ; screen and border colors
-    sta $900F
-	lda #1			;Set the background of the character to white
-	sta $286		;Store it in $286 memory
-
-	ldx #0
-	ldy #0
-
-cll:				;Printing the white screen among the black background
-    lda #32+128
-    sta 7680,x      ; screen memory
-    sta 7680+256,x
-    dex
-    bne cll
-
+	jsr $e55f		; clear screen
 	lda #'@			; load mario
-	jsr CHROUT		; print char in accumulator
-	; lda #'[			; load koopa1
-	; jsr CHROUT		; print char in accumulator
-	; lda #']			; load koopa2
-	; jsr CHROUT		; print char in accumulator
-	; lda #'"			; load goomba
-	; jsr CHROUT		; print char in accumulator
-	; lda #'&			; load block
-	; jsr CHROUT		; print char in accumulator
-	; lda #'#			; load box
-	; jsr CHROUT		; print char in accumulator
-	; lda #'$			; load coin block
-	; jsr CHROUT		; print char in accumulator
-	; lda #'?			; load question block
-	; jsr CHROUT		; print char in accumulator
+	jsr $FFD2		; print char in accumulator
+	lda #'[			; load koopa1
+	jsr $FFD2		; print char in accumulator
+	lda #']			; load koopa2
+	jsr $FFD2		; print char in accumulator
+	lda #':			; load goomba
+	jsr $FFD2		; print char in accumulator
+	lda #'&			; load block
+	jsr $FFD2		; print char in accumulator
+	lda #'#			; load box
+	jsr $FFD2		; print char in accumulator
+	lda #'$			; load coin block
+	jsr $FFD2		; print char in accumulator
+	lda #'?			; load question block
+	jsr $FFD2		; print char in accumulator
 
-main:
-	lda #0
-	jsr	CHRIN		;accept user input for test number 
-	cmp #'W			; Branch to the coressponding key
-	beq jumpToWKey
-	cmp #'A
-	beq jumpToAKey
-	cmp #'S
-	beq jumpToSKey
-	cmp #'D
-	beq jumpToDKey
-	cmp #'Q
-	beq jumpToQKey
-	cmp #'N
-	beq jumpToNKey
-	jmp main		; If there is no input
-
-mainEnd:
-	jsr CLEARSCREEN
-	jmp end
-
-;The codes are too long that we can't directly branching out
-jumpToWKey:
-	lda #1
-	sta $0101
-	jmp jmpEnd
-jumpToAKey:
-	lda #2
-	sta $0101
-	jmp jmpEnd
-jumpToSKey:
-	lda #3
-	sta $0101
-	jmp jmpEnd
-jumpToDKey:
-	lda #4
-	sta $0101
-	jmp jmpEnd
-jumpToQKey:
-	lda #5
-	sta $0101
-	jmp jmpEnd
-jumpToNKey:
-	lda #6
-	sta $0101
-	jmp jmpEnd
-jmpEnd:
-
-nKey:				;Press N to create a new block
-	ldy $0101
-	cpy #6
-	bne nkeyInput
-	ldy #0
-	lda $0113
-	adc #1
-	sta $0113
-	ldx $0113
-nKeyIncrease:
-	inx
-	iny
-	iny
-	iny
-	cpx $0113
-	bne nKeyIncrease
-	lda $0110
-	sta $0113,y
-	iny 
-	lda $0111
-	sta $0113,y
-	iny
-	lda $0112
-	sta $0113,y
-	lda #0
-	sta $0110
-	lda #0
-	sta $0111
-	lda #0
-	sta $0112
-	; get input for the item index
-nkeyInput:
-	ldy $0101
-	cpy #6
-	bne qKey
-	lda #0
-	jsr	CHRIN
-	cmp #'1
-	beq Key1
-	cmp #'2
-	beq Key2
-	cmp #'3
-	beq Key3
-	cmp #'4
-	beq Key4
-	cmp #'5
-	beq Key5
-	cmp #'6
-	beq Key6
-Key1:					;Some extra function that needed to work on later
-	lda #1
-	sta $0110
-	jmp nKeyEnd
-Key2:
-	lda #2
-	sta $0110
-	jmp nKeyEnd
-Key3:
-	lda #3
-	sta $0110
-	jmp nKeyEnd
-Key4:
-	lda #4
-	sta $0110
-	jmp nKeyEnd
-Key5:
-	lda #5
-	sta $0110
-	jmp nKeyEnd
-Key6:
-	lda #6
-	sta $0110
-nKeyEnd:
-	jmp main
-
-qKey:						;When user hit Q, quit the game and print end game message
-	ldy $0101
-	cpy #5
-	bne dKey				;The codes are too long so how to do another branching
-	jsr CLEARSCREEN			;clear screen
-	LDY #0
-	jmp printEndGameMessage
-	jmp end
-
-dKey:						;press D to move right
-	ldy $0101
-	cpy #4
-	bne wKey
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
 	lda #' 
-	jsr CHROUT
-	lda $0111
-	cmp #255
-	beq dKeyDown
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
-	lda $0111
-	adc #1
-	sta $0111
-	jmp drawing
-dKeyDown:
-	lda $0112
-	cmp #255
-	beq jumpToDrawing
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
-	lda $0112
-	adc #1
-	sta $0112
-	jmp drawing
-
-wKey:
-	ldy $0101
-	cpy #1
-	bne aKey
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
+	jsr $FFD2
+	lda #'A
+	jsr $FFD2
+	lda #'B
+	jsr $FFD2
+	lda #'C
+	jsr $FFD2
+	lda #'D
+	jsr $FFD2
+	lda #'E
+	jsr $FFD2
+	lda #'F
+	jsr $FFD2
+	lda #'G
+	jsr $FFD2
+	lda #'H
+	jsr $FFD2
+	lda #'I
+	jsr $FFD2
+	lda #'J
+	jsr $FFD2
+	lda #'K
+	jsr $FFD2
+	lda #'L
+	jsr $FFD2
+	lda #'M
+	jsr $FFD2
+	lda #'N
+	jsr $FFD2
+	lda #'O
+	jsr $FFD2
+	lda #'P
+	jsr $FFD2
+	lda #'Q
+	jsr $FFD2
+	lda #'R
+	jsr $FFD2
+	lda #'S
+	jsr $FFD2
+	lda #'T
+	jsr $FFD2
+	lda #'U
+	jsr $FFD2
+	lda #'V
+	jsr $FFD2
+	lda #'W
+	jsr $FFD2
+	lda #'X
+	jsr $FFD2
+	lda #'Y
+	jsr $FFD2
+	lda #'Z
+	jsr $FFD2
 	lda #' 
-	jsr CHROUT
-	ldx #0
-wKey1:
-	lda $0112
-	cmp #0
-	beq wKey2
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
-	lda $0112
-	sbc #1
-	sta $0112
-	jmp wkeyEnd
-wKey2:
-	lda $0111
-	cmp #0
-	beq wkeyEnd
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
-	lda $0111
-	sbc #1
-	sta $0111
-wkeyEnd:
-	cpx #21
-	beq jumpToDrawing
-	inx 
-	jmp wKey1
+	jsr $FFD2
+	lda #'0
+	jsr $FFD2
+	lda #'1
+	jsr $FFD2
+	lda #'2
+	jsr $FFD2
+	lda #'3
+	jsr $FFD2
+	lda #'4
+	jsr $FFD2
+	lda #'5
+	jsr $FFD2
+	lda #'6
+	jsr $FFD2
+	lda #'7
+	jsr $FFD2
+	lda #'8
+	jsr $FFD2
+	lda #'9
+	jsr $FFD2
 
-jumpToDrawing:
-	jmp drawing
-	rts
-
-aKey:
-	ldy $0101
-	cpy #2
-	bne sKey
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #' 
-	jsr CHROUT
-	lda $0112
-	cmp #0
-	beq aKeyUp
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
-	lda $0112
-	sbc #1
-	sta $0112
-	jmp drawing
-aKeyUp:
-	lda $0111
-	cmp #0
-	beq drawing
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
-	lda $0111
-	sbc #1
-	sta $0111
-	jmp drawing
-
-; offset is 242 to make it correctly
-sKey:
-	ldy $0101
-	cpy #3
-	bne sound
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #' 
-	jsr CHROUT
-	ldx #0
-sKey1:
-	lda $0111
-	cmp #255
-	beq sKey2
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
-	lda $0111
-	adc #1
-	sta $0111
-	jmp sKeyEnd
-sKey2:
-	lda $0112
-	cmp #255
-	beq sKeyEnd
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
-	lda $0112
-	adc #1
-	sta $0112
-sKeyEnd:
-	cpx #21
-	beq drawing
-	inx
-	jmp sKey1
-
-sound:
-	lda #168
-	sta $900c		; -- effect sound if input
-	lda #0
-	sta $900c
-	jmp	main
-
-drawing:
-	lda $0112
-	cmp #0
-	bne drawingCurrentBlockDown
-	; ldx $0111		; position
-	; lda $0110		; item type
-	; sta 38400,x
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #'@
-	jsr CHROUT
-	jmp sound
-drawingCurrentBlockDown:
-	; ldx $0112
-	; lda $0110
-	; sta 38400+255,x
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #'@
-	jsr CHROUT
-	jmp sound
-
-printEndGameMessage:				;Print end game message
-	LDA endGameMessage,Y
-	CMP #0
-	BEQ endPrintEndGameMessage
-	JSR	CHROUT
-	INY 
-	jmp printEndGameMessage
-endPrintEndGameMessage:
-	jmp end
-
-
-end:
-	jmp end
+endLoop:
+	jmp endLoop
 	
-endGameMessage:
-	.byte "END GAME", 0
+	lda #'a
+	jsr $FFD2
+	lda #'b
+	jsr $FFD2
+	lda #'c
+	jsr $FFD2
+	lda #'d
+	jsr $FFD2
+	lda #'e
+	jsr $FFD2
+	lda #'f
+	jsr $FFD2
+	lda #'g
+	jsr $FFD2
+	lda #'h
+	jsr $FFD2
+	lda #'i
+	jsr $FFD2
+	lda #'j
+	jsr $FFD2
+	lda #'k
+	jsr $FFD2
+	lda #'l
+	jsr $FFD2
+	lda #'m
+	jsr $FFD2
+	lda #'n
+	jsr $FFD2
+	lda #'o
+	jsr $FFD2
+	lda #'p
+	jsr $FFD2
+	lda #'q
+	jsr $FFD2
+	lda #'r
+	jsr $FFD2
+	lda #'s
+	jsr $FFD2
+	lda #'t
+	jsr $FFD2
+	lda #'u
+	jsr $FFD2
+	lda #'v
+	jsr $FFD2
+	lda #'w
+	jsr $FFD2
+	lda #'x
+	jsr $FFD2
+	lda #'y
+	jsr $FFD2
+	lda #'z
+	jsr $FFD2
