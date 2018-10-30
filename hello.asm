@@ -447,8 +447,8 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-	; lda #'@			; load mario
-	; jsr CHROUT		; print char in accumulator
+	lda #'@			; load mario
+	jsr CHROUT		; print char in accumulator
 	; lda #'[			; load koopa1
 	; jsr CHROUT		; print char in accumulator
 	; lda #']			; load koopa2
@@ -627,9 +627,6 @@ dKey:						;press D to move right
 	lda $0111
 	cmp #255
 	beq dKeyDown
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -638,9 +635,6 @@ dKeyDown:
 	lda $0112
 	cmp #255
 	beq jumpToDrawing
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -661,9 +655,6 @@ wKey1:
 	lda $0112
 	cmp #0
 	beq wKey2
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -672,9 +663,6 @@ wKey2:
 	lda $0111
 	cmp #0
 	beq wkeyEnd
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -701,9 +689,6 @@ aKey:
 	lda $0112
 	cmp #0
 	beq aKeyUp
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -712,9 +697,6 @@ aKeyUp:
 	lda $0111
 	cmp #0
 	beq drawing
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -736,9 +718,6 @@ sKey1:
 	lda $0111
 	cmp #255
 	beq sKey2
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -747,9 +726,6 @@ sKey2:
 	lda $0112
 	cmp #255
 	beq sKeyEnd
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -814,63 +790,63 @@ drawingOut:
 	jsr CHROUT
 	jmp sound 
 
-;********************
-; This part has bug
-drawExist:
-	ldx #0
-	ldy #0
-drawExistLoop:
-	inx
-	iny
-	lda #0113,y
-	sta $D1 
-	iny 
-	lda #0113,y 
-	sta $D3 
-	iny
-	lda #0113,y
-	cmp #1
-	bne drawExistNext1
-	lda #'@
-	jmp darwingExistOut
-drawExistNext1:
-	cmp #2
-	bne drawExistNext2
-	lda #'[
-	jmp darwingExistOut
-drawExistNext2:
-	cmp #3
-	bne drawExistNext3
-	lda #']
-	jmp darwingExistOut
-drawExistNext3:
-	cmp #4
-	bne drawExistNext4
-	;lda #'"			; -- change before compile
-	jmp darwingExistOut
-drawExistNext4:
-	cmp #5
-	bne drawExistNext5
-	lda #'#
-	jmp darwingExistOut
-drawExistNext5:
-	cmp #6
-	bne drawExistNext6
-	lda #'&
-	jmp darwingExistOut
-drawExistNext6:
-	cmp #7
-	bne drawExistNext7
-	lda #'$
-	jmp darwingExistOut
-drawExistNext7:
-	lda #'?
-	jmp darwingExistOut
-darwingExistOut:
-	jsr CHROUT
-	cpx $0113
-	bne drawExist
-	jmp sound
+; ;********************
+; ; This part has bug
+; drawExist:
+; 	ldx #0
+; 	ldy #0
+; drawExistLoop:
+; 	inx
+; 	iny
+; 	lda #0113,y
+; 	sta $D1 
+; 	iny 
+; 	lda #0113,y 
+; 	sta $D3 
+; 	iny
+; 	lda #0113,y
+; 	cmp #1
+; 	bne drawExistNext1
+; 	lda #'@
+; 	jmp drawingExistOut
+; drawExistNext1:
+; 	cmp #2
+; 	bne drawExistNext2
+; 	lda #'[
+; 	jmp drawingExistOut
+; drawExistNext2:
+; 	cmp #3
+; 	bne drawExistNext3
+; 	lda #']
+; 	jmp drawingExistOut
+; drawExistNext3:
+; 	cmp #4
+; 	bne drawExistNext4
+; 	;lda #'"			; -- change before compile
+; 	jmp drawingExistOut
+; drawExistNext4:
+; 	cmp #5
+; 	bne drawExistNext5
+; 	lda #'#
+; 	jmp drawingExistOut
+; drawExistNext5:
+; 	cmp #6
+; 	bne drawExistNext6
+; 	lda #'&
+; 	jmp drawingExistOut
+; drawExistNext6:
+; 	cmp #7
+; 	bne drawExistNext7
+; 	lda #'$
+; 	jmp drawingExistOut
+; drawExistNext7:
+; 	lda #'?
+; 	jmp drawingExistOut
+; drawingExistOut:
+; 	jsr CHROUT
+; 	cpx $0113
+; 	bne drawExist
+; 	jmp sound
 
 
 printEndGameMessage:				;Print end game message

@@ -447,8 +447,8 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-	; lda #'@			; load mario
-	; jsr CHROUT		; print char in accumulator
+	lda #'@			; load mario
+	jsr CHROUT		; print char in accumulator
 	; lda #'[			; load koopa1
 	; jsr CHROUT		; print char in accumulator
 	; lda #']			; load koopa2
@@ -612,7 +612,8 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
-	jmp end
+	jsr CLEARSCREEN
+	jmp start
 
 dKey:						;press D to move right
 	ldy $0101
@@ -816,61 +817,61 @@ drawingOut:
 
 ;********************
 ; This part has bug
-drawExist:
-	ldx #0
-	ldy #0
-drawExistLoop:
-	inx
-	iny
-	lda #0113,y
-	sta $D1 
-	iny 
-	lda #0113,y 
-	sta $D3 
-	iny
-	lda #0113,y
-	cmp #1
-	bne drawExistNext1
-	lda #'@
-	jmp darwingExistOut
-drawExistNext1:
-	cmp #2
-	bne drawExistNext2
-	lda #'[
-	jmp darwingExistOut
-drawExistNext2:
-	cmp #3
-	bne drawExistNext3
-	lda #']
-	jmp darwingExistOut
-drawExistNext3:
-	cmp #4
-	bne drawExistNext4
-	lda #'<			; -- change before compile
-	jmp darwingExistOut
-drawExistNext4:
-	cmp #5
-	bne drawExistNext5
-	lda #'#
-	jmp darwingExistOut
-drawExistNext5:
-	cmp #6
-	bne drawExistNext6
-	lda #'&
-	jmp darwingExistOut
-drawExistNext6:
-	cmp #7
-	bne drawExistNext7
-	lda #'$
-	jmp darwingExistOut
-drawExistNext7:
-	lda #'?
-	jmp darwingExistOut
-darwingExistOut:
-	jsr CHROUT
-	cpx $0113
-	bne drawExist
-	jmp sound
+; drawExist:
+; 	ldx #0
+; 	ldy #0
+; drawExistLoop:
+; 	inx
+; 	iny
+; 	lda #0113,y
+; 	sta $D1 
+; 	iny 
+; 	lda #0113,y 
+; 	sta $D3 
+; 	iny
+; 	lda #0113,y
+; 	cmp #1
+; 	bne drawExistNext1
+; 	lda #'@
+; 	jmp darwingExistOut
+; drawExistNext1:
+; 	cmp #2
+; 	bne drawExistNext2
+; 	lda #'[
+; 	jmp darwingExistOut
+; drawExistNext2:
+; 	cmp #3
+; 	bne drawExistNext3
+; 	lda #']
+; 	jmp darwingExistOut
+; drawExistNext3:
+; 	cmp #4
+; 	bne drawExistNext4
+; 	lda #'<			; -- change before compile
+; 	jmp darwingExistOut
+; drawExistNext4:
+; 	cmp #5
+; 	bne drawExistNext5
+; 	lda #'#
+; 	jmp darwingExistOut
+; drawExistNext5:
+; 	cmp #6
+; 	bne drawExistNext6
+; 	lda #'&
+; 	jmp darwingExistOut
+; drawExistNext6:
+; 	cmp #7
+; 	bne drawExistNext7
+; 	lda #'$
+; 	jmp darwingExistOut
+; drawExistNext7:
+; 	lda #'?
+; 	jmp darwingExistOut
+; darwingExistOut:
+; 	jsr CHROUT
+; 	cpx $0113
+; 	bne drawExist
+; 	jmp sound
 
 
 printEndGameMessage:				;Print end game message
@@ -881,12 +882,14 @@ printEndGameMessage:				;Print end game message
 	INY 
 	jmp printEndGameMessage
 endPrintEndGameMessage:
+	lda #0
+	jsr CHRIN
+	BEQ endPrintEndGameMessage
 	jmp end
-
 
 end:
 	jmp end
-
+		
 endGameMessage:
 	.byte "END GAME", 0
 menuMessage1:
