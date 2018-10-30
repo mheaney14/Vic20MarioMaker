@@ -414,8 +414,8 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-	lda #'@			; load mario
-	jsr CHROUT		; print char in accumulator
+	; lda #'@			; load mario
+	; jsr CHROUT		; print char in accumulator
 	; lda #'[			; load koopa1
 	; jsr CHROUT		; print char in accumulator
 	; lda #']			; load koopa2
@@ -430,6 +430,9 @@ cll:				;Printing the white screen among the black background
 	; jsr CHROUT		; print char in accumulator
 	; lda #'?			; load question block
 	; jsr CHROUT		; print char in accumulator
+	
+	lda #1
+	sta $0110
 
 main:
 	lda #0
@@ -514,6 +517,7 @@ nkeyInput:
 	ldy $0101
 	cpy #6
 	bne qKey
+
 	lda #0
 	jsr	CHRIN
 	cmp #'1
@@ -528,6 +532,11 @@ nkeyInput:
 	beq Key5
 	cmp #'6
 	beq Key6
+	cmp #'7
+	beq Key7
+	cmp #'8
+	beq Key8
+	jmp nkeyInput
 Key1:					;Some extra function that needed to work on later
 	lda #1
 	sta $0110
@@ -550,6 +559,14 @@ Key5:
 	jmp nKeyEnd
 Key6:
 	lda #6
+	sta $0110
+	jmp nKeyEnd
+Key7:
+	lda #7
+	sta $0110
+	jmp nKeyEnd
+Key8:
+	lda #8
 	sta $0110
 nKeyEnd:
 	jmp main
@@ -719,27 +736,61 @@ drawing:
 	lda $0112
 	cmp #0
 	bne drawingCurrentBlockDown
-	; ldx $0111		; position
-	; lda $0110		; item type
-	; sta 38400,x
 	ldx $0111
 	stx $D1
 	ldx $0112
 	stx $D3
-	lda #'@
-	jsr CHROUT
-	jmp sound
+	jmp decideSymbol
+
 drawingCurrentBlockDown:
-	; ldx $0112
-	; lda $0110
-	; sta 38400+255,x
 	ldx $0111
 	stx $D1
 	ldx $0112
 	stx $D3
+
+decideSymbol:
+	lda $0110
+	cmp #1
+	bne drawNext1
 	lda #'@
+	jmp drawingOut
+drawNext1:
+	cmp #2
+	bne drawNext2
+	lda #'[
+	jmp drawingOut
+drawNext2:
+	cmp #3
+	bne drawNext3
+	lda #']
+	jmp drawingOut
+drawNext3:
+	cmp #4
+	bne drawNext4
+	lda #'"			; -- change before compile
+	jmp drawingOut
+drawNext4:
+	cmp #5
+	bne drawNext5
+	lda #'#
+	jmp drawingOut
+drawNext5:
+	cmp #6
+	bne drawNext6
+	lda #'&
+	jmp drawingOut
+drawNext6:
+	cmp #7
+	bne drawNext7
+	lda #'$
+	jmp drawingOut
+drawNext7:
+	lda #'?
+	jmp drawingOut
+
+drawingOut:
 	jsr CHROUT
-	jmp sound
+	jmp sound 
 
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
