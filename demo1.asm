@@ -306,21 +306,21 @@ loadChar:
 	
 ;******************* Goomba *******************
 	lda #$00		; replaces ':
-	sta $1DD0
+	sta $1DE0
 	lda #$00
-	sta $1DD1
+	sta $1DE1
 	lda #$18
-	sta $1DD2
+	sta $1DE2
 	lda #$3C
-	sta $1DD3
+	sta $1DE3
 	lda #$7E
-	sta $1DD4
+	sta $1DE4
 	lda #$7E
-	sta $1DD5
+	sta $1DE5
 	lda #$18
-	sta $1DD6
+	sta $1DE6
 	lda #$24
-	sta $1DD7
+	sta $1DE7
 	
 ;******************* Box *******************
 	lda #$FF		; replaces '# can be used as selector
@@ -399,7 +399,7 @@ loadChar:
 	; jsr $e55f		; clear screen
 start:		
 	jsr CLEARSCREEN
-    lda #0        ; screen and border colors
+    lda #0			; screen and border colors
     sta $900F
 	lda #1			;Set the background of the character to white
 	sta $286		;Store it in $286 memory
@@ -413,15 +413,23 @@ printSpacesMenu:
 	cpx #0			; check if more spaces to print
 	bne printSpacesMenu
 	ldy #0
-
-printMenu:
-	lda menuMessage,Y
+	
+printMenu1:
+	lda menuMessage1,Y
 	cmp #0			; if there is more message to print
 	beq donePrintMenu
 	JSR CHROUT
 	iny
-	jmp printMenu
+	jmp printMenu1
 	ldy #0
+printMenu2:
+	lda menuMessage2,Y
+	cmp #0			; if there is more message to print
+	beq donePrintMenu
+	JSR CHROUT
+	iny
+	jmp printMenu2
+	
 donePrintMenu:
 	lda #0
 	jsr CHRIN
@@ -439,6 +447,23 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
+	; lda #'@			; load mario
+	; jsr CHROUT		; print char in accumulator
+	; lda #'[			; load koopa1
+	; jsr CHROUT		; print char in accumulator
+	; lda #']			; load koopa2
+	; jsr CHROUT		; print char in accumulator
+	; lda #'"			; load goomba
+	; jsr CHROUT		; print char in accumulator
+	; lda #'&			; load block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'#			; load box
+	; jsr CHROUT		; print char in accumulator
+	; lda #'$			; load coin block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'?			; load question block
+	; jsr CHROUT		; print char in accumulator
+	
 	lda #1
 	sta $0110
 
@@ -506,13 +531,14 @@ nKeyIncrease:
 	iny
 	cpx $0113
 	bne nKeyIncrease
-	lda $0110
-	sta $0113,y
-	iny 
+	iny
 	lda $0111
 	sta $0113,y
-	iny
+	iny 
 	lda $0112
+	sta $0113,y
+	iny
+	lda $0110
 	sta $0113,y
 	lda #0
 	sta $0110
@@ -577,7 +603,7 @@ Key8:
 	lda #8
 	sta $0110
 nKeyEnd:
-	jmp main
+	jmp drawing
 
 qKey:						;When user hit Q, quit the game and print end game message
 	ldy $0101
@@ -741,21 +767,10 @@ sound:
 	jmp	main
 
 drawing:
-	lda $0112
-	cmp #0
-	bne drawingCurrentBlockDown
 	ldx $0111
 	stx $D1
 	ldx $0112
 	stx $D3
-	jmp decideSymbol
-
-drawingCurrentBlockDown:
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-
 decideSymbol:
 	lda $0110
 	cmp #1
@@ -775,7 +790,7 @@ drawNext2:
 drawNext3:
 	cmp #4
 	bne drawNext4
-	lda #':			; -- change before compile
+	lda #'<			; -- change before compile
 	jmp drawingOut
 drawNext4:
 	cmp #5
@@ -794,11 +809,69 @@ drawNext6:
 	jmp drawingOut
 drawNext7:
 	lda #'?
-	jmp drawingOut
 
 drawingOut:
 	jsr CHROUT
 	jmp sound 
+
+;********************
+; This part has bug
+drawExist:
+	ldx #0
+	ldy #0
+drawExistLoop:
+	inx
+	iny
+	lda #0113,y
+	sta $D1 
+	iny 
+	lda #0113,y 
+	sta $D3 
+	iny
+	lda #0113,y
+	cmp #1
+	bne drawExistNext1
+	lda #'@
+	jmp darwingExistOut
+drawExistNext1:
+	cmp #2
+	bne drawExistNext2
+	lda #'[
+	jmp darwingExistOut
+drawExistNext2:
+	cmp #3
+	bne drawExistNext3
+	lda #']
+	jmp darwingExistOut
+drawExistNext3:
+	cmp #4
+	bne drawExistNext4
+	lda #'<			; -- change before compile
+	jmp darwingExistOut
+drawExistNext4:
+	cmp #5
+	bne drawExistNext5
+	lda #'#
+	jmp darwingExistOut
+drawExistNext5:
+	cmp #6
+	bne drawExistNext6
+	lda #'&
+	jmp darwingExistOut
+drawExistNext6:
+	cmp #7
+	bne drawExistNext7
+	lda #'$
+	jmp darwingExistOut
+drawExistNext7:
+	lda #'?
+	jmp darwingExistOut
+darwingExistOut:
+	jsr CHROUT
+	cpx $0113
+	bne drawExist
+	jmp sound
+
 
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
@@ -813,8 +886,10 @@ endPrintEndGameMessage:
 
 end:
 	jmp end
-	
+
 endGameMessage:
 	.byte "END GAME", 0
-menuMessage:
+menuMessage1:
 	.byte "SUPER MARIO MAKER   PRESS ANY KEY TO PLAY", 0	
+menuMessage2:
+	.byte " PRESS ANY KEY TO PLAY  ", 0	
