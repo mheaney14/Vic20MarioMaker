@@ -603,7 +603,7 @@ Key8:
 	lda #8
 	sta $0110
 nKeyEnd:
-	jmp main
+	jmp drawing
 
 qKey:						;When user hit Q, quit the game and print end game message
 	ldy $0101
