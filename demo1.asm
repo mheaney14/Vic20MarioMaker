@@ -24,7 +24,7 @@ loadChar:
 	lda $8000,X		; load x from ROM
 	sta $1C00,X		; store previous char in RAM
 	inx				; increment x
-	cpx #$4C		; if x < $80 then do loop again
+	cpx #$40		; if x < $80 then do loop again
 	bne loadChar
 	
 	lda #$FF
@@ -214,6 +214,42 @@ loadChar:
 	lda #$00
 	sta $1DCF
 
+;******************* letter H *******************
+	lda #$42		; replaces 'H (doesn't work for some reason??)
+	sta $1C40
+	lda #$42
+	sta $1C41
+	lda #$42
+	sta $1C42
+	lda #$7E
+	sta $1C43
+	lda #$42
+	sta $1C44
+	lda #$42
+	sta $1C45
+	lda #$42
+	sta $1C46
+	lda #$00
+	sta $1C47
+
+;******************* letter I *******************
+	lda #$1C		; replaces 'I (doesn't work for some reason??)
+	sta $1C48
+	lda #$08
+	sta $1C49
+	lda #$08
+	sta $1C4A
+	lda #$08
+	sta $1C4B
+	lda #$08
+	sta $1C4C
+	lda #$08
+	sta $1C4D
+	lda #$1C
+	sta $1C4E
+	lda #$00
+	sta $1C4F
+
 ;******************* Mario Character *******************
 	lda #$3C		; start of mario character (top of head)
 	sta $1C00		; start of memory location for mario (mario replaces '@ => get mario in accumulator: lda #'@)
@@ -360,9 +396,10 @@ loadChar:
 
 ;******************* End of Graphics *******************
 
+	; jsr $e55f		; clear screen
 start:		
 	jsr CLEARSCREEN
-    lda #0			; screen and border colors
+    lda #0        ; screen and border colors
     sta $900F
 	lda #1			;Set the background of the character to white
 	sta $286		;Store it in $286 memory
@@ -376,23 +413,15 @@ printSpacesMenu:
 	cpx #0			; check if more spaces to print
 	bne printSpacesMenu
 	ldy #0
-	
-printMenu1:
-	lda menuMessage1,Y
+
+printMenu:
+	lda menuMessage,Y
 	cmp #0			; if there is more message to print
 	beq donePrintMenu
 	JSR CHROUT
 	iny
-	jmp printMenu1
+	jmp printMenu
 	ldy #0
-printMenu2:
-	lda menuMessage2,Y
-	cmp #0			; if there is more message to print
-	beq donePrintMenu
-	JSR CHROUT
-	iny
-	jmp printMenu2
-	
 donePrintMenu:
 	lda #0
 	jsr CHRIN
@@ -410,8 +439,8 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-	lda #'@			; load mario
-	jsr CHROUT		; print char in accumulator
+	lda #1
+	sta $0110
 
 main:
 	lda #0
@@ -459,8 +488,8 @@ jumpToNKey:
 	lda #6
 	sta $0101
 	jmp jmpEnd
-
 jmpEnd:
+
 nKey:				;Press N to create a new block
 	ldy $0101
 	cpy #6
@@ -496,6 +525,7 @@ nkeyInput:
 	ldy $0101
 	cpy #6
 	bne qKey
+
 	lda #0
 	jsr	CHRIN
 	cmp #'1
@@ -510,6 +540,11 @@ nkeyInput:
 	beq Key5
 	cmp #'6
 	beq Key6
+	cmp #'7
+	beq Key7
+	cmp #'8
+	beq Key8
+	jmp nkeyInput
 Key1:					;Some extra function that needed to work on later
 	lda #1
 	sta $0110
@@ -532,6 +567,14 @@ Key5:
 	jmp nKeyEnd
 Key6:
 	lda #6
+	sta $0110
+	jmp nKeyEnd
+Key7:
+	lda #7
+	sta $0110
+	jmp nKeyEnd
+Key8:
+	lda #8
 	sta $0110
 nKeyEnd:
 	jmp main
@@ -701,27 +744,61 @@ drawing:
 	lda $0112
 	cmp #0
 	bne drawingCurrentBlockDown
-	; ldx $0111		; position
-	; lda $0110		; item type
-	; sta 38400,x
 	ldx $0111
 	stx $D1
 	ldx $0112
 	stx $D3
-	lda #'@
-	jsr CHROUT
-	jmp sound
+	jmp decideSymbol
+
 drawingCurrentBlockDown:
-	; ldx $0112
-	; lda $0110
-	; sta 38400+255,x
 	ldx $0111
 	stx $D1
 	ldx $0112
 	stx $D3
+
+decideSymbol:
+	lda $0110
+	cmp #1
+	bne drawNext1
 	lda #'@
+	jmp drawingOut
+drawNext1:
+	cmp #2
+	bne drawNext2
+	lda #'[
+	jmp drawingOut
+drawNext2:
+	cmp #3
+	bne drawNext3
+	lda #']
+	jmp drawingOut
+drawNext3:
+	cmp #4
+	bne drawNext4
+	lda #':			; -- change before compile
+	jmp drawingOut
+drawNext4:
+	cmp #5
+	bne drawNext5
+	lda #'#
+	jmp drawingOut
+drawNext5:
+	cmp #6
+	bne drawNext6
+	lda #'&
+	jmp drawingOut
+drawNext6:
+	cmp #7
+	bne drawNext7
+	lda #'$
+	jmp drawingOut
+drawNext7:
+	lda #'?
+	jmp drawingOut
+
+drawingOut:
 	jsr CHROUT
-	jmp sound
+	jmp sound 
 
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
@@ -739,7 +816,5 @@ end:
 	
 endGameMessage:
 	.byte "END GAME", 0
-menuMessage1:
+menuMessage:
 	.byte "SUPER MARIO MAKER   PRESS ANY KEY TO PLAY", 0	
-menuMessage2:
-	.byte " PRESS ANY KEY TO PLAY  ", 0	
