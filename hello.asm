@@ -1,5 +1,6 @@
-CHROUT	= $FFD2
-CHRIN	= $FFE4
+CHROUT		= $FFD2
+CHRIN		= $FFE4
+CLEARSCREEN = $E55F
 
 	processor 6502
 	org $1001
@@ -12,29 +13,242 @@ basicend
 		dc.w 0	;end of basic program
 		
 
-;	jsr $e55f						; clear screen
 	lda #28
-	sta 52
-	lda #28
-	sta 56			; the above 4 lines cause memory not to be used for code (used for storing 64 new characters)
+	sta $34
+	sta $36			; the above 3 lines cause memory not to be used for code (used for storing 64 new characters)
 	
 	; this stores the regular set of characters, we can then swap new ones in their places
-	; for x = $0 to $199 get from $8000+x, store at $1C00+x
+	; for x = $0 to $7F get from $8000+x, store at $1C00+x
 	ldx $0
 loadChar:
 	lda $8000,X		; load x from ROM
 	sta $1C00,X		; store previous char in RAM
 	inx				; increment x
-	cpx $200		; if x < $200 then do loop again
+	cpx #$40		; if x < $80 then do loop again
 	bne loadChar
 	
-	ldx $9005
 	lda #$FF
 	sta $9005		; characters are stored at $1C00 - $1DFF and use 8 bytes of memory each
 
 ;******************* Start of Graphics *******************
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
+
+;******************* number 0 *******************
+	lda #$3C		; replaces '0 (doesn't work for some reason??)
+	sta $1D80
+	lda #$42
+	sta $1D81
+	lda #$46
+	sta $1D82
+	lda #$5A
+	sta $1D83
+	lda #$62
+	sta $1D84
+	lda #$42
+	sta $1D85
+	lda #$3C
+	sta $1D86
+	lda #$00
+	sta $1D87
+
+;******************* number 1 *******************
+	lda #$08		; replaces '1 (doesn't work for some reason??)
+	sta $1D88
+	lda #$18
+	sta $1D89
+	lda #$28
+	sta $1D8A
+	lda #$08
+	sta $1D8B
+	lda #$08
+	sta $1D8C
+	lda #$08
+	sta $1D8D
+	lda #$3E
+	sta $1D8E
+	lda #$00
+	sta $1D8F
+
+;******************* number 2 *******************
+	lda #$3C		; replaces '2 (doesn't work for some reason??)
+	sta $1D90
+	lda #$42
+	sta $1D91
+	lda #$02
+	sta $1D92
+	lda #$0C
+	sta $1D93
+	lda #$30
+	sta $1D94
+	lda #$40
+	sta $1D95
+	lda #$7E
+	sta $1D96
+	lda #$00
+	sta $1D97
+
+;******************* number 3 *******************
+	lda #$3C		; replaces '3 (doesn't work for some reason??)
+	sta $1D98
+	lda #$42
+	sta $1D99
+	lda #$02
+	sta $1D9A
+	lda #$1C
+	sta $1D9B
+	lda #$02
+	sta $1D9C
+	lda #$42
+	sta $1D9D
+	lda #$3C
+	sta $1D9E
+	lda #$00
+	sta $1D9F
+
+;******************* number 4 *******************
+	lda #$04		; replaces '4 (doesn't work for some reason??)
+	sta $1DA0
+	lda #$0C
+	sta $1DA1
+	lda #$14
+	sta $1DA2
+	lda #$24
+	sta $1DA3
+	lda #$7E
+	sta $1DA4
+	lda #$04
+	sta $1DA5
+	lda #$04
+	sta $1DA6
+	lda #$00
+	sta $1DA7
+
+;******************* number 5 *******************
+	lda #$7E		; replaces '5 (doesn't work for some reason??)
+	sta $1DA8
+	lda #$40
+	sta $1DA9
+	lda #$78
+	sta $1DAA
+	lda #$04
+	sta $1DAB
+	lda #$02
+	sta $1DAC
+	lda #$44
+	sta $1DAD
+	lda #$38
+	sta $1DAE
+	lda #$00
+	sta $1DAF
+
+;******************* number 6 *******************
+	lda #$1C		; replaces '6 (doesn't work for some reason??)
+	sta $1DB0
+	lda #$20
+	sta $1DB1
+	lda #$40
+	sta $1DB2
+	lda #$7C
+	sta $1DB3
+	lda #$42
+	sta $1DB4
+	lda #$42
+	sta $1DB5
+	lda #$3C
+	sta $1DB6
+	lda #$00
+	sta $1DB7
+
+;******************* number 7 *******************
+	lda #$7E		; replaces '7 (doesn't work for some reason??)
+	sta $1DB8
+	lda #$42
+	sta $1DB9
+	lda #$04
+	sta $1DBA
+	lda #$08
+	sta $1DBB
+	lda #$10
+	sta $1DBC
+	lda #$10
+	sta $1DBD
+	lda #$10
+	sta $1DBE
+	lda #$00
+	sta $1DBF
+
+;******************* number 8 *******************
+	lda #$3C		; replaces '8 (doesn't work for some reason??)
+	sta $1DC0
+	lda #$42
+	sta $1DC1
+	lda #$42
+	sta $1DC2
+	lda #$3C
+	sta $1DC3
+	lda #$42
+	sta $1DC4
+	lda #$42
+	sta $1DC5
+	lda #$3C
+	sta $1DC6
+	lda #$00
+	sta $1DC7
+
+;******************* number 9 *******************
+	lda #$3C		; replaces '9 (doesn't work for some reason??)
+	sta $1DC8
+	lda #$42
+	sta $1DC9
+	lda #$42
+	sta $1DCA
+	lda #$3E
+	sta $1DCB
+	lda #$02
+	sta $1DCC
+	lda #$04
+	sta $1DCD
+	lda #$38
+	sta $1DCE
+	lda #$00
+	sta $1DCF
+
+;******************* letter H *******************
+	lda #$42		; replaces 'H (doesn't work for some reason??)
+	sta $1C40
+	lda #$42
+	sta $1C41
+	lda #$42
+	sta $1C42
+	lda #$7E
+	sta $1C43
+	lda #$42
+	sta $1C44
+	lda #$42
+	sta $1C45
+	lda #$42
+	sta $1C46
+	lda #$00
+	sta $1C47
+
+;******************* letter I *******************
+	lda #$1C		; replaces 'I (doesn't work for some reason??)
+	sta $1C48
+	lda #$08
+	sta $1C49
+	lda #$08
+	sta $1C4A
+	lda #$08
+	sta $1C4B
+	lda #$08
+	sta $1C4C
+	lda #$08
+	sta $1C4D
+	lda #$1C
+	sta $1C4E
+	lda #$00
+	sta $1C4F
 
 ;******************* Mario Character *******************
 	lda #$3C		; start of mario character (top of head)
@@ -91,22 +305,22 @@ loadChar:
 	sta $1CEF
 	
 ;******************* Goomba *******************
-	lda #$00		; replaces '"
-	sta $1D10
+	lda #$00		; replaces ':
+	sta $1DD0
 	lda #$00
-	sta $1D11
+	sta $1DD1
 	lda #$18
-	sta $1D12
+	sta $1DD2
 	lda #$3C
-	sta $1D13
+	sta $1DD3
 	lda #$7E
-	sta $1D14
+	sta $1DD4
 	lda #$7E
-	sta $1D15
+	sta $1DD5
 	lda #$18
-	sta $1D16
+	sta $1DD6
 	lda #$24
-	sta $1D17
+	sta $1DD7
 	
 ;******************* Box *******************
 	lda #$FF		; replaces '# can be used as selector
@@ -184,13 +398,14 @@ loadChar:
 
 	; jsr $e55f		; clear screen
 start:		
-	jsr $E55F
+	jsr CLEARSCREEN
     lda #0        ; screen and border colors
     sta $900F
 	lda #1			;Set the background of the character to white
 	sta $286		;Store it in $286 memory
 
 	ldx #0
+	ldy #0
 cll:
     lda #32+128
     sta 7680,x      ; screen memory
@@ -199,24 +414,235 @@ cll:
     bne cll
 
 	lda #'@			; load mario
-	jsr $FFD2		; print char in accumulator
-	lda #'[			; load koopa1
-	jsr $FFD2		; print char in accumulator
-	lda #']			; load koopa2
-	jsr $FFD2		; print char in accumulator
-	lda #'"			; load goomba
-	jsr $FFD2		; print char in accumulator
-	lda #'&			; load block
-	jsr $FFD2		; print char in accumulator
-	lda #'#			; load box
-	jsr $FFD2		; print char in accumulator
-	lda #'$			; load coin block
-	jsr $FFD2		; print char in accumulator
-	lda #'?			; load question block
-	jsr $FFD2		; print char in accumulator
+	jsr CHROUT		; print char in accumulator
+	; lda #'[			; load koopa1
+	; jsr CHROUT		; print char in accumulator
+	; lda #']			; load koopa2
+	; jsr CHROUT		; print char in accumulator
+	; lda #'"			; load goomba
+	; jsr CHROUT		; print char in accumulator
+	; lda #'&			; load block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'#			; load box
+	; jsr CHROUT		; print char in accumulator
+	; lda #'$			; load coin block
+	; jsr CHROUT		; print char in accumulator
+	; lda #'?			; load question block
+	; jsr CHROUT		; print char in accumulator
 
+main:
+	lda #0
+	jsr	CHRIN		;accept user input for test number 
+	cmp #'W			; Branch to the coressponding key
+	beq wKey
+	cmp #'A
+	beq jumpToAKey
+	cmp #'S
+	beq jumpToSKey
+	cmp #'D
+	beq dKey
+	cmp #'Q
+	beq qKey
+	jmp main		; If there is no input
+
+mainEnd:
+	jsr CLEARSCREEN
+	jmp end
+
+
+dKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'
+	jsr CHROUT
+	lda $0111
+	cmp #255
+	beq dKeyDown
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
+	lda $0111
+	adc #1
+	sta $0111
+	jmp drawing
+
+jumpToAKey:
+	jmp aKey
+	rts
+
+jumpToSKey:
+	jmp	sKey
+	rts
+
+dKeyDown:
+	lda $0112
+	cmp #255
+	beq jumpToDrawing
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
+	lda $0112
+	adc #1
+	sta $0112
+	jmp drawing
+
+wKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #' 
+	jsr CHROUT
+	ldx #0
+wKey1:
+	lda $0112
+	cmp #0
+	beq wKey2
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
+	lda $0112
+	sbc #1
+	sta $0112
+	jmp wkeyEnd
+wKey2:
+	lda $0111
+	cmp #0
+	beq wkeyEnd
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
+	lda $0111
+	sbc #1
+	sta $0111
+wkeyEnd:
+	cpx #21
+	beq jumpToDrawing
+	inx 
+	jmp wKey1
+
+qKey:						;When user hit Q, quit the game and print end game message
+	jsr CLEARSCREEN
+	LDY #0
+	jmp printEndGameMessage
+
+jumpToDrawing:
+	jmp drawing
+	rts
+
+aKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #' 
+	jsr CHROUT
+	lda $0112
+	cmp #0
+	beq aKeyUp
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
+	lda $0112
+	sbc #1
+	sta $0112
+	jmp drawing
+aKeyUp:
+	lda $0111
+	cmp #0
+	beq drawing
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
+	lda $0111
+	sbc #1
+	sta $0111
+	jmp drawing
+
+; offset is 242 to make it correctly
+sKey:
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #' 
+	jsr CHROUT
+	ldx #0
+sKey1:
+	lda $0111
+	cmp #255
+	beq sKey2
+	; ldy $0111
+	; lda #1
+	; sta 38400,y
+	lda $0111
+	adc #1
+	sta $0111
+	jmp sKeyEnd
+sKey2:
+	lda $0112
+	cmp #255
+	beq sKeyEnd
+	; ldy $0112
+	; lda #1
+	; sta 38400+255,y
+	lda $0112
+	adc #1
+	sta $0112
+sKeyEnd:
+	cpx #21
+	beq drawing
+	inx
+	jmp sKey1
+
+sound:
+	lda #168
+	sta $900c		; -- effect sound if input
+	lda #0
+	sta $900c
+	jmp	main
+
+drawing:
+	lda $0112
+	cmp #0
+	bne drawingCurrentBlockDown
+	; ldx $0111		; position
+	; lda $0110		; item type
+	; sta 38400,x
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'@
+	jsr CHROUT
+	jmp sound
+drawingCurrentBlockDown:
+	; ldx $0112
+	; lda $0110
+	; sta 38400+255,x
+	ldx $0111
+	stx $D1
+	ldx $0112
+	stx $D3
+	lda #'@
+	jsr CHROUT
+	jmp sound
+
+printEndGameMessage:				;Print end game message
+	LDA endGameMessage,Y
+	CMP #0
+	BEQ endPrintEndGameMessage
+	JSR	CHROUT
+	INY 
+	jmp printEndGameMessage
+endPrintEndGameMessage:
+	jmp end
 
 
 end:
 	jmp end
-	rts
+	
+endGameMessage:
+	.byte "END GAME", 0
