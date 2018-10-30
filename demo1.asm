@@ -24,7 +24,7 @@ loadChar:
 	lda $8000,X		; load x from ROM
 	sta $1C00,X		; store previous char in RAM
 	inx				; increment x
-	cpx #$40		; if x < $80 then do loop again
+	cpx #$4C		; if x < $80 then do loop again
 	bne loadChar
 	
 	lda #$FF
@@ -213,42 +213,6 @@ loadChar:
 	sta $1DCE
 	lda #$00
 	sta $1DCF
-
-;******************* letter H *******************
-	lda #$42		; replaces 'H (doesn't work for some reason??)
-	sta $1C40
-	lda #$42
-	sta $1C41
-	lda #$42
-	sta $1C42
-	lda #$7E
-	sta $1C43
-	lda #$42
-	sta $1C44
-	lda #$42
-	sta $1C45
-	lda #$42
-	sta $1C46
-	lda #$00
-	sta $1C47
-
-;******************* letter I *******************
-	lda #$1C		; replaces 'I (doesn't work for some reason??)
-	sta $1C48
-	lda #$08
-	sta $1C49
-	lda #$08
-	sta $1C4A
-	lda #$08
-	sta $1C4B
-	lda #$08
-	sta $1C4C
-	lda #$08
-	sta $1C4D
-	lda #$1C
-	sta $1C4E
-	lda #$00
-	sta $1C4F
 
 ;******************* Mario Character *******************
 	lda #$3C		; start of mario character (top of head)
