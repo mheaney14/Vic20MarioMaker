@@ -437,6 +437,9 @@ cll:				;Printing the white screen among the black background
 	sta $0110
 
 main:
+	jsr	music
+
+userInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
@@ -452,6 +455,30 @@ main:
 	cmp #'N
 	beq jumpToNKey
 	jmp main		; If there is no input
+
+
+waitLoop:
+	iny 
+	cpy #20
+	bne waitLoop
+	rts
+
+music:
+	lda #2
+	sta $900e
+	lda #159
+	sta $900c
+	ldy #0	
+	jsr waitLoop
+	lda #179
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	lda #199
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	rts
 
 mainEnd:
 	jsr CLEARSCREEN
