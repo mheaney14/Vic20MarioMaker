@@ -18,14 +18,19 @@ basicend
 	sta $36			; the above 3 lines cause memory not to be used for code (used for storing 64 new characters)
 	
 	; this stores the regular set of characters, we can then swap new ones in their places
-	; for x = $0 to $7F get from $8000+x, store at $1C00+x
-	ldx $0
-loadChar:
+	; for x = $0 to $FF get from $8000+x, store at $1C00+x (should get all characters in 1st set)
+	; for x = $0 to $FF get from $8100+x, store at $1D00+x (should get all characters in 2nd set)
+	ldx #$0
+loadChar1:
 	lda $8000,X		; load x from ROM
 	sta $1C00,X		; store previous char in RAM
-	inx				; increment x
-	cpx #$4C		; if x < $80 then do loop again
-	bne loadChar
+	inx				; increment x (note X is 2 bytes so this value will become 0 after $FF iterations)
+	bne loadChar1
+loadChar2:
+	lda $8100,X
+	sta $1D00,X
+	inx
+	bne loadChar2
 	
 	lda #$FF
 	sta $9005		; characters are stored at $1C00 - $1DFF and use 8 bytes of memory each
@@ -454,30 +459,17 @@ mainEnd:
 
 ;The codes are too long that we can't directly branching out
 jumpToWKey:
-	lda #1
-	sta $0101
-	jmp jmpEnd
+	jmp wKey
 jumpToAKey:
-	lda #2
-	sta $0101
-	jmp jmpEnd
+	jmp aKey
 jumpToSKey:
-	lda #3
-	sta $0101
-	jmp jmpEnd
+	jmp sKey
 jumpToDKey:
-	lda #4
-	sta $0101
-	jmp jmpEnd
+	jmp dKey
 jumpToQKey:
-	lda #5
-	sta $0101
-	jmp jmpEnd
+	jmp qKey
 jumpToNKey:
-	lda #6
-	sta $0101
-	jmp jmpEnd
-jmpEnd:
+	jmp nKey
 
 nKey:				;Press N to create a new block
 	ldy $0101
@@ -538,41 +530,37 @@ nkeyInput:
 Key1:					;Some extra function that needed to work on later
 	lda #1
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key2:
 	lda #2
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key3:
 	lda #3
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key4:
 	lda #4
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key5:
 	lda #5
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key6:
 	lda #6
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key7:
 	lda #7
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key8:
 	lda #8
 	sta $0110
-nKeyEnd:
 	jmp drawing
 
 qKey:						;When user hit Q, quit the game and print end game message
-	ldy $0101
-	cpy #5
-	bne dKey				;The codes are too long so how to do another branching
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
@@ -580,9 +568,6 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jmp start
 
 dKey:						;press D to move right
-	ldy $0101
-	cpy #4
-	bne wKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -592,9 +577,6 @@ dKey:						;press D to move right
 	lda $0111
 	cmp #255
 	beq dKeyDown
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -603,18 +585,12 @@ dKeyDown:
 	lda $0112
 	cmp #255
 	beq jumpToDrawing
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
 	jmp drawing
 
 wKey:
-	ldy $0101
-	cpy #1
-	bne aKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -626,9 +602,6 @@ wKey1:
 	lda $0112
 	cmp #0
 	beq wKey2
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -637,9 +610,6 @@ wKey2:
 	lda $0111
 	cmp #0
 	beq wkeyEnd
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -654,9 +624,6 @@ jumpToDrawing:
 	rts
 
 aKey:
-	ldy $0101
-	cpy #2
-	bne sKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -666,9 +633,6 @@ aKey:
 	lda $0112
 	cmp #0
 	beq aKeyUp
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	sbc #1
 	sta $0112
@@ -677,9 +641,6 @@ aKeyUp:
 	lda $0111
 	cmp #0
 	beq drawing
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	sbc #1
 	sta $0111
@@ -687,9 +648,6 @@ aKeyUp:
 
 ; offset is 242 to make it correctly
 sKey:
-	ldy $0101
-	cpy #3
-	bne sound
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -701,9 +659,6 @@ sKey1:
 	lda $0111
 	cmp #255
 	beq sKey2
-	; ldy $0111
-	; lda #1
-	; sta 38400,y
 	lda $0111
 	adc #1
 	sta $0111
@@ -712,9 +667,6 @@ sKey2:
 	lda $0112
 	cmp #255
 	beq sKeyEnd
-	; ldy $0112
-	; lda #1
-	; sta 38400+255,y
 	lda $0112
 	adc #1
 	sta $0112
@@ -725,10 +677,22 @@ sKeyEnd:
 	jmp sKey1
 
 sound:
+	lda #15
+	sta $900e
 	lda #168
 	sta $900c		; -- effect sound if input
+	ldx #0
+soundLoop:
+	ldy #0
+soundLoop2:
+	iny
+	cpy #200
+	bne soundLoop2
+	inx
+	cpx #50
+	bne soundLoop
 	lda #0
-	sta $900c
+	sta $900e
 	jmp	main
 
 drawing:
@@ -778,64 +742,6 @@ drawNext7:
 drawingOut:
 	jsr CHROUT
 	jmp sound 
-
-;********************
-; This part has bug
-; drawExist:
-; 	ldx #0
-; 	ldy #0
-; drawExistLoop:
-; 	inx
-; 	iny
-; 	lda #0113,y
-; 	sta $D1 
-; 	iny 
-; 	lda #0113,y 
-; 	sta $D3 
-; 	iny
-; 	lda #0113,y
-; 	cmp #1
-; 	bne drawExistNext1
-; 	lda #'@
-; 	jmp darwingExistOut
-; drawExistNext1:
-; 	cmp #2
-; 	bne drawExistNext2
-; 	lda #'[
-; 	jmp darwingExistOut
-; drawExistNext2:
-; 	cmp #3
-; 	bne drawExistNext3
-; 	lda #']
-; 	jmp darwingExistOut
-; drawExistNext3:
-; 	cmp #4
-; 	bne drawExistNext4
-; 	lda #'<			; -- change before compile
-; 	jmp darwingExistOut
-; drawExistNext4:
-; 	cmp #5
-; 	bne drawExistNext5
-; 	lda #'#
-; 	jmp darwingExistOut
-; drawExistNext5:
-; 	cmp #6
-; 	bne drawExistNext6
-; 	lda #'&
-; 	jmp darwingExistOut
-; drawExistNext6:
-; 	cmp #7
-; 	bne drawExistNext7
-; 	lda #'$
-; 	jmp darwingExistOut
-; drawExistNext7:
-; 	lda #'?
-; 	jmp darwingExistOut
-; darwingExistOut:
-; 	jsr CHROUT
-; 	cpx $0113
-; 	bne drawExist
-; 	jmp sound
 
 
 printEndGameMessage:				;Print end game message
