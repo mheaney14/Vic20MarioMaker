@@ -172,43 +172,58 @@ printChars:
 	jmp printChars
 
 moveMyChar:
-	ldx #$08			; HERE FOR TESTING
-	ldy #$10			; HERE FOR TESTING
-moveUp2:
-	lda GRAPHSTART2,X
-	pha			; push value at input X to stack
+	ldx #$10			; HERE FOR TESTING
+	ldy #$C0			; HERE FOR TESTING
+moveDown1:
+	lda #0
+	asl			; set carry bit to 0 (automatically uses accumulator)
+	txa
+	adc #7		; shouldn't set carry bit
+	tax			; x = input+7
 	tya
-	pha			; pushed input Y to stack
+	adc #7		;shouldn't set carry bit
+	tay			; y = input+7
+	lda GRAPHSTART1,Y
+	pha			; push value at input Y + 7 to stack
+	txa
+	pha			; pushed input X + 7 to stack
+	tya
+	tax
+	dex			; X = Y-1 (Y=inputY+7, X=Y-1)
+	lda GRAPHSTART1,X	; load at Y-1
+	sta GRAPHSTART1,Y	; store at Y
+down1Loop1:
+	dex			; decrement to move to next line up
+	dey
+	lda GRAPHSTART1,X	; load at Y-1
+	sta GRAPHSTART1,Y	; store at Y
+	txa
+	and #7		; stop looping when last 3 bits of y are 0
+	bne down1Loop1
+	dex			; decrement to move to next line up
+	dey
+	lda GRAPHSTART1,X	; load at Y-1
+	sta GRAPHSTART1,Y	; store at Y
+	pla
+	tax			; input X+7 is back from stack
+	lda GRAPHSTART1,X
+	sta GRAPHSTART1,Y
 	txa
 	tay
-	iny			; Y = X+1
-up2Loop1:
-	lda GRAPHSTART2,Y	; load at X+1
-	sta GRAPHSTART2,X	; store at X
-	inx			; increment to move to next line down
-	iny
+	dey			; Y = X-1
+down1Loop2:
+	lda GRAPHSTART1,Y	; load at X-1
+	sta GRAPHSTART1,X ; store at X
+	dex			; decrement to move to next line up
+	dey
 	tya
-	and #7		; stop looping when last 3 bits of y are 0
-	bne up2Loop1
-	pla
-	tay			; input y is back from stack
-	lda GRAPHSTART2,Y
-	sta GRAPHSTART2,X
-	tya
-	tax
-	inx			; X = Y+1
-up2Loop2:
-	lda GRAPHSTART2,X	; load at Y+1
-	sta GRAPHSTART2,Y ; store at Y
-	inx			; increment to move to next line down
-	iny
-	txa
 	and #7		; stop looping when last 3 bits of x are 0
-	bne up2Loop2
+	bne down1Loop2
+	lda GRAPHSTART1,Y	; load at X-1
+	sta GRAPHSTART1,X ; store at X
+	dex
 	pla
-	tax
-	lda GRAPHSTART2,X
-	sta GRAPHSTART2,Y
+	sta GRAPHSTART1,X
 
 
 	

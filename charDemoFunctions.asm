@@ -66,8 +66,6 @@ up1Loop2:
 	and #7		; stop looping when last 3 bits of x are 0
 	bne up1Loop2
 	pla
-	tax
-	lda GRAPHSTART1,X
 	sta GRAPHSTART1,Y
 	
 moveDown1:
@@ -79,29 +77,34 @@ moveDown1:
 	tya
 	adc #7		;shouldn't set carry bit
 	tay			; y = input+7
-	
 	lda GRAPHSTART1,Y
 	pha			; push value at input Y + 7 to stack
 	txa
 	pha			; pushed input X + 7 to stack
 	tya
 	tax
-	dex			; X = Y-1
-down1Loop1:
+	dex			; X = Y-1 (Y=inputY+7, X=Y-1)
 	lda GRAPHSTART1,X	; load at Y-1
 	sta GRAPHSTART1,Y	; store at Y
+down1Loop1:
 	dex			; decrement to move to next line up
 	dey
+	lda GRAPHSTART1,X	; load at Y-1
+	sta GRAPHSTART1,Y	; store at Y
 	txa
 	and #7		; stop looping when last 3 bits of y are 0
 	bne down1Loop1
+	dex			; decrement to move to next line up
+	dey
+	lda GRAPHSTART1,X	; load at Y-1
+	sta GRAPHSTART1,Y	; store at Y
 	pla
 	tax			; input X+7 is back from stack
 	lda GRAPHSTART1,X
 	sta GRAPHSTART1,Y
 	txa
 	tay
-	dex			; Y = X-1
+	dey			; Y = X-1
 down1Loop2:
 	lda GRAPHSTART1,Y	; load at X-1
 	sta GRAPHSTART1,X ; store at X
@@ -110,9 +113,10 @@ down1Loop2:
 	tya
 	and #7		; stop looping when last 3 bits of x are 0
 	bne down1Loop2
+	lda GRAPHSTART1,Y	; load at X-1
+	sta GRAPHSTART1,X ; store at X
+	dex
 	pla
-	tay
-	lda GRAPHSTART1,Y
 	sta GRAPHSTART1,X
 
 ;**************************************************************************************************************;
@@ -185,8 +189,6 @@ up2Loop2:
 	and #7		; stop looping when last 3 bits of x are 0
 	bne up2Loop2
 	pla
-	tax
-	lda GRAPHSTART2,X
 	sta GRAPHSTART2,Y
 	
 moveDown2:
@@ -198,29 +200,34 @@ moveDown2:
 	tya
 	adc #7		;shouldn't set carry bit
 	tay			; y = input+7
-	
 	lda GRAPHSTART2,Y
 	pha			; push value at input Y + 7 to stack
 	txa
 	pha			; pushed input X + 7 to stack
 	tya
 	tax
-	dex			; X = Y-1
-down2Loop1:
+	dex			; X = Y-1 (Y=inputY+7, X=Y-1)
 	lda GRAPHSTART2,X	; load at Y-1
 	sta GRAPHSTART2,Y	; store at Y
+down2Loop1:
 	dex			; decrement to move to next line up
 	dey
+	lda GRAPHSTART2,X	; load at Y-1
+	sta GRAPHSTART2,Y	; store at Y
 	txa
 	and #7		; stop looping when last 3 bits of y are 0
 	bne down2Loop1
+	dex			; decrement to move to next line up
+	dey
+	lda GRAPHSTART2,X	; load at Y-1
+	sta GRAPHSTART2,Y	; store at Y
 	pla
 	tax			; input X+7 is back from stack
 	lda GRAPHSTART2,X
 	sta GRAPHSTART2,Y
 	txa
 	tay
-	dex			; Y = X-1
+	dey			; Y = X-1
 down2Loop2:
 	lda GRAPHSTART2,Y	; load at X-1
 	sta GRAPHSTART2,X ; store at X
@@ -229,7 +236,8 @@ down2Loop2:
 	tya
 	and #7		; stop looping when last 3 bits of x are 0
 	bne down2Loop2
+	lda GRAPHSTART2,Y	; load at X-1
+	sta GRAPHSTART2,X ; store at X
+	dex
 	pla
-	tay
-	lda GRAPHSTART2,Y
 	sta GRAPHSTART2,X
