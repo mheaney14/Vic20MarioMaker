@@ -27,7 +27,8 @@ basicend
     sta $0011
     lda #0
     sta $0012
-    ldy #3
+    ldy #5
+
 store:
     ldx $0012
     lda #1          ; The value that you need to store
@@ -42,9 +43,9 @@ store:
 
 load:
     ldx $0011
-    inx
     cpx $0012
     beq end
+    inx
     lda $0012,x
     ldx $0011
     inx
