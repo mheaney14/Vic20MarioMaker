@@ -27,14 +27,18 @@ basicend
     sta $0011
     lda #0
     sta $0012
-
+    ldy #3
 store:
     ldx $0012
     lda #1          ; The value that you need to store
     sta $0013,x
-    lda $0012       ; Increment the stack end pointer
-    adc #1
-    sta $0012
+    ldx $0012
+    inx
+    stx $0012
+
+    dey
+    cpy #0
+    bne store
 
 load:
     ldx $0011
