@@ -39,23 +39,23 @@ loadChar2:
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
 
-;******************* number 0 *******************
-	lda #$3C		; replaces '0 (doesn't work for some reason??)
-	sta $1D80
-	lda #$42
-	sta $1D81
-	lda #$46
-	sta $1D82
-	lda #$5A
-	sta $1D83
-	lda #$62
-	sta $1D84
-	lda #$42
-	sta $1D85
+;******************* Mario Character *******************
+	lda #$3C		; start of mario character (top of head)
+	sta $1C00		; start of memory location for mario (mario replaces '@ => get mario in accumulator: lda #'@)
 	lda #$3C
-	sta $1D86
-	lda #$00
-	sta $1D87
+	sta $1C01
+	lda #$18
+	sta $1C02
+	lda #$FF
+	sta $1C03
+	lda #$3C
+	sta $1C04
+	lda #$3C
+	sta $1C05
+	lda #$24
+	sta $1C06
+	lda #$C3		; feet
+	sta $1C07		; end memory location for mario
 
 ;******************* number 1 *******************
 	lda #$08		; replaces '1 (doesn't work for some reason??)
@@ -274,7 +274,7 @@ loadChar2:
 	sta $1CEF
 	
 ;******************* Goomba *******************
-	lda #$00		; replaces ':
+	lda #$00		; replaces '<
 	sta $1DE0
 	lda #$00
 	sta $1DE1
@@ -418,20 +418,6 @@ cll:				;Printing the white screen among the black background
 
 	lda #'@			; load mario
 	jsr CHROUT		; print char in accumulator
-	; lda #'[			; load koopa1
-	; jsr CHROUT		; print char in accumulator
-	; lda #']			; load koopa2
-	; jsr CHROUT		; print char in accumulator
-	; lda #'"			; load goomba
-	; jsr CHROUT		; print char in accumulator
-	; lda #'&			; load block
-	; jsr CHROUT		; print char in accumulator
-	; lda #'#			; load box
-	; jsr CHROUT		; print char in accumulator
-	; lda #'$			; load coin block
-	; jsr CHROUT		; print char in accumulator
-	; lda #'?			; load question block
-	; jsr CHROUT		; print char in accumulator
 	
 	lda #1
 	sta $0110
@@ -499,22 +485,22 @@ jumpToNKey:
 	jmp nKey
 
 nKey:				;Press N to create a new block
-	ldy $0101
-	cpy #6
-	bne nkeyInput
-	ldy #0
-	lda $0113
-	adc #1
-	sta $0113
-	ldx $0113
+
+	ldx $0012
+	lda $D1 
+	sta $0013,x
+	ldx $0012
+	inx 
+	stx $0012
+
+	ldx $0012
+	lda $D3 
+	sta $0013,x 
+	ldx $0012 
+	inx 
+	stx $0012
+
 nKeyIncrease:
-	inx
-	iny
-	iny
-	iny
-	cpx $0113
-	bne nKeyIncrease
-	iny
 	lda $0111
 	sta $0113,y
 	iny 
@@ -531,9 +517,6 @@ nKeyIncrease:
 	sta $0112
 	; get input for the item index
 nkeyInput:
-	ldy $0101
-	cpy #6
-	bne qKey
 
 	lda #0
 	jsr	CHRIN
@@ -592,7 +575,7 @@ qKey:						;When user hit Q, quit the game and print end game message
 	LDY #0
 	jmp printEndGameMessage
 	jsr CLEARSCREEN
-	jmp start
+	jmp end
 
 dKey:						;press D to move right
 	ldx $0111
@@ -785,6 +768,8 @@ endPrintEndGameMessage:
 	jmp end
 
 end:
+	lda #0
+	sta $900e
 	jmp end
 		
 endGameMessage:
