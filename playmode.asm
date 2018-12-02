@@ -2,16 +2,15 @@ CHROUT		= $FFD2
 CHRIN		= $FFE4
 CLEARSCREEN = $E55F
 
-	processor 6502
+    processor 6502
 	org $1001
 
 	dc.w basicend
-	dc.w 1234			;line number for sys instruction (arbitrary?)
+	dc.w 1024			;line number for sys instruction (arbitrary?)
 	dc.b $9e, "4109"	;sys instruction and memory location
 	dc.b 0				; end of instruction
 basicend	
 		dc.w 0	;end of basic program
-		
 
 	lda #28
 	sta $34
@@ -39,23 +38,23 @@ loadChar2:
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
 
-;******************* number 0 *******************
-	lda #$3C		; replaces '0 (doesn't work for some reason??)
-	sta $1D80
-	lda #$42
-	sta $1D81
-	lda #$46
-	sta $1D82
-	lda #$5A
-	sta $1D83
-	lda #$62
-	sta $1D84
-	lda #$42
-	sta $1D85
+;******************* Mario Character *******************
+	lda #$3C		; start of mario character (top of head)
+	sta $1C00		; start of memory location for mario (mario replaces '@ => get mario in accumulator: lda #'@)
 	lda #$3C
-	sta $1D86
-	lda #$00
-	sta $1D87
+	sta $1C01
+	lda #$18
+	sta $1C02
+	lda #$FF
+	sta $1C03
+	lda #$3C
+	sta $1C04
+	lda #$3C
+	sta $1C05
+	lda #$24
+	sta $1C06
+	lda #$C3		; feet
+	sta $1C07		; end memory location for mario
 
 ;******************* number 1 *******************
 	lda #$08		; replaces '1 (doesn't work for some reason??)
@@ -274,7 +273,7 @@ loadChar2:
 	sta $1CEF
 	
 ;******************* Goomba *******************
-	lda #$00		; replaces ':
+	lda #$00		; replaces '<
 	sta $1DE0
 	lda #$00
 	sta $1DE1
@@ -365,6 +364,7 @@ loadChar2:
 
 ;******************* End of Graphics *******************
 
+	; jsr $e55f		; clear screen
 start:		
 	jsr CLEARSCREEN
     lda #0			; screen and border colors
@@ -385,21 +385,74 @@ printSpacesMenu:
 printMenu1:
 	lda menuMessage1,Y
 	cmp #0			; if there is more message to print
-	beq donePrintMenu
+	beq donePrintMenuInit
 	JSR CHROUT
 	iny
 	jmp printMenu1
-	
+
+donePrintMenuInit:
+	ldx #12
+	stx $1000
 donePrintMenu:
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #'@
+	jsr CHROUT
+
 	lda #0
 	jsr CHRIN
-	cmp #0
-	beq donePrintMenu
-	
+	cmp #'S
+	beq menuDown
+	cmp #' 
+	beq menuSelect
+	jmp donePrintMenu
+menuDown:
+	lda $1000
+	cmp #16
+	beq MenuDownEnd
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda $1000
+	adc #2
+	sta $1000
+	jmp donePrintMenu
+MenuDownEnd:
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda #12
+	sta $1000
+	jmp donePrintMenu
+menuSelect:
+	lda $1000
+	cmp #12
+	beq toPlayMode
+; 	cmp #14
+; 	beq toCreateMode
+; 	cmp #16
+; 	beq toPlayCreated
+toPlayMode:
+	jmp playModeInit
+; toCreateMode:
+; 	jmp createMode
+; toPlayCreated:
+; 	jmp PlayCreated
+
+;***********************************************************
+;Enter the play mode
+playModeInit:
 	ldx #0
 	ldy #0
 	jsr CLEARSCREEN
-
 cll:				;Printing the white screen among the black background
     lda #32+128
     sta 7680,x      ; screen memory
@@ -407,27 +460,68 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-;**********************************************
-;A just for now floor printer
-    ldx #0
-    lda #119
-    sta $0001
-floor:
+;Print the Map 1
+;It is like the print message function
+;But since the map is bigger than the message, so the y will greater than 255, which is overflow
+;In order to deal with it, I divide the map into several part, so that the y will not out of range
+;However, there is a magical spot in the screen, which is the bottom right most corner, if we touch it with the normal way
+;it would return a new page, which will push the map up and leave bottom blank
+;in order to solve this, we will use "printMap1End" function to deal with it, and make it ground forever to make our lives easier
+	ldy #0
+printMap1:
+	lda GameMap1,y
+	cmp #0			
+	beq printMap1RestInit
+	JSR CHROUT
+	iny
+	jmp printMap1
+printMap1RestInit:
+	ldy #0
+printMap1Rest:
+	lda GameMap1+243,y
+	cmp #0			
+	beq printMap1FinalInit
+	JSR CHROUT
+	iny
+	jmp printMap1Rest
+printMap1FinalInit:
+	ldy #0
+printMap1Final:
+	lda GameMap1+486,y
+	cmp #0			
+	beq printMap1End
+	JSR CHROUT
+	iny
+	jmp printMap1Final
+printMap1End:
+	ldx #21
+	ldy #43
+	clc 
+	jsr $fff0
+	lda #'&
+	jsr CHROUT
+
+test:
+	jmp test
+
+
+    ; Print out the mario 
     lda #255
     sta $D1
-    lda $0001
+    lda #97
     sta $D3
-    lda #'&
+    lda #'@
     jsr CHROUT
-    lda $0001
-    adc #22
-    sta $0001
-    inx
-    cpx #6
-    bne floor
-    jmp end
+    lda #255
+    sta $0005       ;Mario D1 position
+    lda #97
+    sta $0006       ;Mario D3 position
 
 
+
+
+;***************************************
+;end of the game
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
 	CMP #0
@@ -443,8 +537,34 @@ endPrintEndGameMessage:
 
 end:
 	jmp end
-		
+
+menuMessage1:
+	.byte "SUPER MARIO MAKER ?                                                                         PLAY MODE                                  CREATE MODE                                 PLAY CREATED", 0
+
+GameMap1:
+	.byte "1                     "
+	.byte "2                     "
+	.byte "3                     "
+	.byte "4                     "
+	.byte "5                     "
+	.byte "6                     "
+	.byte "7                     "
+	.byte "8                     "
+	.byte "9                     "
+	.byte "10                    "
+	.byte "11                    ",0
+	.byte "12                    "
+	.byte "13                    "
+	.byte "14            ?       "
+	.byte "15                    "
+	.byte "16                    "
+	.byte "17  #        ]     [  "
+	.byte "18&&&&&  &&&&&&&&&&&&&"
+	.byte "19&&&&&  &&&&&&&&&&&&&"
+	.byte "20&&&&&  &&&&&&&&&&&&&"
+	.byte "21&&&&&  &&&&&&&&&&&&&"
+	.byte "22&&&&&  &&&&&&&&&&&&&",0
+	.byte "23&&&&&  &&&&&&&&&&&&",0
+
 endGameMessage:
 	.byte "END GAME", 0
-menuMessage1:
-	.byte "SUPER MARIO MAKER                                                                            PLAY MODE                                  CREATE MODE", 0	
