@@ -168,7 +168,7 @@ set2ndChars:		; all these start initially blank
 printChars:
 	lda chars,Y
 	cmp #0			; if there is more to print
-	beq getKeyInput
+	beq jmpGetKeyInput
 	jsr CHROUT
 	iny
 	jmp printChars
@@ -176,7 +176,7 @@ printChars:
 moveMyChar:
 	ldx #$40			; HERE FOR TESTING
 	ldy #$48			; HERE FOR TESTING
-moveRight2:		; store address of characters to move right in x and y
+moveRight:		; store address of characters to move right in x and y
 	lda #$01
 	and GRAPHSTART2,Y
 	lsr			; set carry bit to bit 0 of Y (automatically uses accumulator)
@@ -192,12 +192,23 @@ moveRight2:		; store address of characters to move right in x and y
 	iny
 	txa
 	and #$07	; if more lines need to be done (x ends with a number 1-7 or 9-F, 0/8 => done)
-	bne moveRight2
+	bne moveRight
 
+	lda #0
+	pha
+	pha
+	pha
+	lda #8
+	pha
+	jmp marioOverlap
+	
+jmpGetKeyInput:
+	jmp getKeyInput
+jmpMoveMyChar:
+	jmp moveMyChar
 	; Starts at $1DE0, $1DF0, $1D40 and $1D48 (Mario)
 	; Starts at $1D38, $1D50, $1D78 and $1DE8 (Mario + other entities)
 marioOverlap:		; top of stack should hold 4 character starting locations, top left, top right, bottom left and bottom right collision chars (-$1D00)
-	
 	ldy #0
 overlapInitLoop:		; puts just mario into overlap char memory
 	lda $1DE0,Y
@@ -243,8 +254,8 @@ overlapCheck4:
 	ldy #$E8
 overlapCharLoop2:
 	lda $1D00,X			; row of pixels of overlap char	
-	and $1D00,Y			; bitwise and with mario
-	cmp #0
+	; and $1D00,Y			; bitwise and with mario
+	; cmp #0
 	; set memory location triggering collision / branch to collision code
 	ora $1D00,Y			; bitwise or with mario
 	sta $1D00,Y			; store new overlapped mario image
@@ -258,7 +269,7 @@ getKeyInput:
 	lda #0
 	jsr	CHRIN
 	cmp #'W		; if w pressed 
-	beq moveMyChar
+	beq jmpMoveMyChar
 	jmp getKeyInput
 	
 donePrg:
