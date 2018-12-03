@@ -1,6 +1,7 @@
 CHROUT		= $FFD2
 CHRIN		= $FFE4
 CLEARSCREEN = $E55F
+RDTIM = $FFDE
 
     processor 6502
 	org $1001
@@ -453,6 +454,17 @@ playModeInit:
 	ldx #0
 	ldy #0
 	jsr CLEARSCREEN
+	lda #'1
+	sta $1001
+	lda #'2
+	sta $1002	;sets timer to arbitrary initial value
+	lda #3
+	sta $1003 ;initialize number of lives to 3
+	lda #'0
+	sta $1004 ;initialize score to 0
+	
+
+	
 cll:				;Printing the white screen among the black background
     lda #32+128
     sta 7680,x      ; screen memory
@@ -501,6 +513,125 @@ printMap1End:
 	lda #'&
 	jsr CHROUT
 
+;*******Score Display
+displayScore:	
+	ldx #0
+	ldy #11
+	clc
+	jsr $fff0
+	lda #'0
+	jsr CHROUT
+	
+	ldx #0
+	ldy #12
+	clc
+	jsr $fff0
+	lda $1004
+	jsr CHROUT
+	
+	
+;*******Lives display
+checkandDisplayLives:
+	lda $1003
+	cmp #0
+	beq dead
+	jsr displayLives
+	jmp timerLoadandDisplay
+
+displayLives:
+	ldx $1003
+	cpx #1
+	beq drOneLife
+	cpx #2
+	beq drOneLife
+	cpx #3
+	beq drThreeLife
+	jmp drLifeDone
+drThreeLife:
+	ldx #0
+	ldy #2
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda #'@
+	jsr CHROUT
+drTwoLife:
+	ldx #0
+	ldy #1
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda #'@
+	jsr CHROUT
+drOneLife:
+	ldx #0
+	ldy #0
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda #'@
+	jsr CHROUT
+drLifeDone:
+	rts
+
+dead:				;this is mainly just a placeholder flag, when lives run out it should instead trigger a gameover
+
+;******* End of Lives code
+;*******timer display and updating
+timerLoadandDisplay:		;Loading timeer value from $1001 and displaying it in top right
+	ldx #0          ; Row
+    ldy #20          ; Column
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1001
+	jsr CHROUT
+	ldx #0          ; Row
+    ldy #21          ; Column
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1002
+	jsr CHROUT
+	jsr checkTimeChange
+	jsr decrementTimer
+	jmp timerLoadandDisplay
+
+decrementTimer:	;decrements the current value in $1002. If the value is zero it wraps around to 9 and decrements value in $1001. If $1001 is 0 when it attempts to decrement, the timer ends and the game is over
+	lda $1002
+zeroTest:
+	cmp #'0
+	bne subTimer
+endTest:
+	lda $1001
+	cmp #'0
+	bne continueDecrement
+	jsr timerDone
+continueDecrement:
+	tax
+	dex
+	txa
+	sta $1001
+	lda #'9
+	sta	$1002
+	jmp finishDecrement
+subTimer:
+	tax
+	dex
+	txa
+	sta $1002
+finishDecrement:
+	rts
+	
+checkTimeChange:	;delay the timer decrementing until the internal clock has decreased (currently every 5 seconds)
+	jsr RDTIM
+	stx $1bfe
+waitForChange:
+	jsr RDTIM
+	cpx $1bfe
+	beq waitForChange
+	rts
+	
+timerDone:
+	jsr printEndGameMessage
+	jmp timerDone
+	rts
+;*******end of timer code	
+	
 test:
 	jmp test
 
@@ -516,7 +647,6 @@ test:
     sta $0005       ;Mario D1 position
     lda #97
     sta $0006       ;Mario D3 position
-
 
 
 

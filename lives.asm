@@ -364,72 +364,80 @@ loadChar2:
 	sta $1DFF
 
 ;******************* End of Graphics *******************
+	jsr CLEARSCREEN
+	lda #3
+	sta $1003 ;initialize number of lives to 3
+
+checkandDisplayLives:
+	lda $1003
+	cmp #0
+	beq dead
+	jsr displayLives
+	jmp waitforInput
+	
+waitforInput:
+	jsr $ffe4
+	cmp #'F
+	beq fpress
+	jmp waitforInput
+
+fpress:
+	jsr loseLife
+
+dead:
+
+	jmp dead
+
+displayLives:
+	ldx $1003
+	cpx #1
+	beq drOneLife
+	cpx #2
+	beq drOneLife
+	cpx #3
+	beq drThreeLife
+	jmp drLifeDone
+drThreeLife:
+	lda #2
+	sta $D3
+	lda #'@
+	jsr CHROUT
+drTwoLife:
+	lda #1
+	sta $D3
+	lda #'@
+	jsr CHROUT
+drOneLife:
+	lda #0
+	sta $D3
+	lda #'@
+	jsr CHROUT
+drLifeDone:
+	rts
+	
+loseLife:
+	lda $1003
+	tax
+	dex
+	txa
+	sta $1003
+	jsr refreshLives
+	rts
+	
+refreshLives:
+	lda #2
+	sta $D3
 	lda #'1
-	sta $1001
-	lda #'2
-	sta $1002	;sets timer to arbitrary initial value
-timerLoadandDisplay:		;Loading timeer value from $1001 and displaying it in top right
-	jsr CLEARSCREEN
-	lda #20
-	sta $D3
-	lda $1001
-	jsr	CHROUT
-	lda #21
-	sta $D3
-	lda $1002
 	jsr CHROUT
-	jsr checkTimeChange
-	jsr decrementTimer
-	jmp timerLoadandDisplay
-
-testTimerDisplay:	;This is just to test displaying an arbitrarily saved number at the top-right corner of the screen
-	jsr CLEARSCREEN
-	lda #20
+	lda #1
 	sta $D3
-	lda #'9
+	lda #'1
 	jsr CHROUT
-	lda #21
-	sta $D3
-	lda #'8
+	lda #0
+	lda #'1
 	jsr CHROUT
-	jmp testTimerDisplay
-	
-decrementTimer:	;decrements the current value in $1002. If the value is zero it wraps around to 9 and decrements value in $1001. If $1001 is 0 when it attempts to decrement, the timer ends and the game is over
-	lda $1002
-zeroTest:
-	cmp #'0
-	bne subTimer
-endTest:
-	lda $1001
-	cmp #'0
-	bne continueDecrement
-	jsr timerDone
-continueDecrement:
-	tax
-	dex
-	txa
-	sta $1001
-	lda #'9
-	sta	$1002
-	jmp finishDecrement
-subTimer:
-	tax
-	dex
-	txa
-	sta $1002
-finishDecrement:
 	rts
 	
-checkTimeChange:	;delay the timer decrementing until the internal clock has decreased (currently every 5 seconds)
-	jsr RDTIM
-	stx $1bfe
-waitForChange:
-	jsr RDTIM
-	cpx $1bfe
-	beq waitForChange
-	rts
 
-timerDone: ;Just a loop that clears screen when the timer reaches its absolute end (normally game would just end)
-	jsr CLEARSCREEN
-	jmp timerDone
-	rts
+	
+
