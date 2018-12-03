@@ -13,19 +13,19 @@
 We are using BASIC memory for storing, which starts from $1000 - $1bff
 
 - $1000 - Current map number
-- $1001 - Game time
-- $1002 - lives
-- $1003 - score
-- $1004 - music time (time for bgm)
-- $1005 - Mario status 
+- $1001 and 1002 - Game time
+- $1003 - lives
+- $1004 - score
+- $1005 - music time (time for bgm)
+- $1006 - Mario status 
         - 1. living
         - 2. dead
         - 3. mushroom?
-- $1006 - Mario X
-- $1007 - Mario Y
+- $1007 - Mario X
+- $1008 - Mario Y
 - ..... - Reserve for missing items
-- $1011 - Stack counter
-- $1012 - Stack end pointer
+- $1012 - Stack counter
+- $1013 - Stack end pointer
 - ..... - Space for the game map matrix
 
 # About the matrix:

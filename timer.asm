@@ -364,13 +364,19 @@ loadChar2:
 	sta $1DFF
 
 ;******************* End of Graphics *******************
-	lda #'9
+	lda #'0
 	sta $1001
+	lda #'2
+	sta $1002	;sets timer to arbitrary initial value
 timerLoadandDisplay:		;Loading timeer value from $1001 and displaying it in top right
 	jsr CLEARSCREEN
-	lda #21
+	lda #20
 	sta $D3
 	lda $1001
+	jsr	CHROUT
+	lda #21
+	sta $D3
+	lda $1002
 	jsr CHROUT
 	jsr checkTimeChange
 	jsr decrementTimer
@@ -389,18 +395,28 @@ testTimerDisplay:	;This is just to test displaying an arbitrarily saved number a
 	jmp testTimerDisplay
 	
 decrementTimer:	;decrements the current value in $1001. If the value is zero it wraps around to 9
-	lda $1001
+	lda $1002
 zeroTest:
 	cmp #'0
 	bne subTimer
+endTest:
+	lda $1001
+	cmp #'0
+	bne continueDecrement
+	jsr timerDone
+continueDecrement:
+	tax
+	dex
+	txa
+	sta $1001
 	lda #'9
-	sta	$1001
+	sta	$1002
 	jmp finishDecrement
 subTimer:
 	tax
 	dex
 	txa
-	sta $1001
+	sta $1002
 finishDecrement:
 	rts
 	
@@ -413,3 +429,7 @@ waitForChange:
 	beq waitForChange
 	rts
 
+timerDone: ;Just a loop that clears screen when the timer reaches its absolute end (normally game would just end)
+	jsr CLEARSCREEN
+	jmp timerDone
+	rts
