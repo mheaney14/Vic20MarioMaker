@@ -38,130 +38,22 @@ loadChar2:
 	lda #$FF
 	sta $9005		; characters are stored at $1C00 - $1DFF and use 8 bytes of memory each
 
-;******************* Start of Graphics *******************
-; characters are 8 bytes
-; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
-
-; Koopa characters represented by alternating '+ with '-, and ', with '.
-	; Starts at $1D58, $1D68, $1D60 and $1D70
-; Goomba characters represented by '! and '"
-	; Starts at $1D08, and $1D10
-; Empty Box characters represented by '#
-	; Starts at $1D18
-; Coin Box characters represented by '$
-	; Starts at $1D20
-; Full Box characters represented by '&
-	; Starts at $1D30
-; Question Box characters represented by '?
-	; Starts at 1DF8
-; Mario Character represented by '<, '>, '(, and ') (top left, top right, bottom left, bottom right)
-	; Starts at $1DE0, $1DF0, $1D40 and $1D48
-; Mario + colliding entity will be stored in '', '*, '/, or '= (top left, top right, bottom left, bottom right)
-	; Starts at $1D38, $1D50, $1D78, $1DE8
-
-setNewChars:
-	lda #$02
-	sta $1D58
-	lda #$10
-	sta $1D5D
-	sta $1D6C
-	lda #$18
-	sta $1D0A
-	sta $1D0E
-	sta $1D42
-	lda #$1C
-	sta $1D5B
-	lda #$1E
-	sta $1D6A
-	lda #$24
-	sta $1D0F
-	sta $1D46
-	lda #$28
-	sta $1D5E
-	sta $1D5F
-	sta $1D6D
-	sta $1D6E
-	lda #$30
-	sta $1D68
-	lda #$36
-	sta $1D59
-	sta $1D5A
-	lda #$37
-	sta $1D69
-	lda #$3C
-	sta $1D0B
-	sta $1D40
-	sta $1D41
-	sta $1D44
-	sta $1D45
-	lda #$70
-	sta $1D5C
-	sta $1D6B
-	lda #$7E
-	sta $1D0C
-	sta $1D0D
-	lda #$81
-	sta $1D19
-	sta $1D1A
-	sta $1D1B
-	sta $1D1C
-	sta $1D1D
-	sta $1D1E
-	sta $1D21
-	sta $1D26
-	sta $1DF9
-	sta $1DFD
-	lda #$89
-	sta $1DFC
-	lda #$91
-	sta $1DFE
-	lda #$99
-	sta $1D22
-	sta $1D25
-	lda #$9D
-	sta $1DFA
-	lda #$A5
-	sta $1DFB
-	lda #$AD
-	sta $1D24
-	lda #$B5
-	sta $1D23
-	lda #$C3
-	sta $1D47
-	lda #$FF
-	sta $1D18
-	sta $1D1F
-	sta $1D20
-	sta $1D27
-	sta $1D30
-	sta $1D31
-	sta $1D32
-	sta $1D33
-	sta $1D34
-	sta $1D35
-	sta $1D36
-	sta $1D37
-	sta $1D43
-	sta $1DF8
-	sta $1DFF
-
-	lda #0
-	sta $1D6F
-	sta $1D08
-	sta $1D09
-	ldx #0
-set2ndChars:		; all these start initially blank
-	sta $1D60,X		; Koopa 1 right side
-	sta $1D70,X		; Koopa 2 right side
-	sta $1D10,X		; Goomba right side
-	sta $1D48,X		; Mario right down
-	sta $1DE0,X		; Mario left up
-	sta $1DF0,X		; Mario right up
+	ldx #$0
+loadNewChars:
+	lda newChars1,X
+	sta GRAPHSTART2,X
 	inx
-	cpx #8
-	bne set2ndChars
-
-;******************* End of Graphics *******************
+	cpx #$81
+	bne loadNewChars
+	ldx #$E0
+	ldy #$0
+loadNewChars2:
+	lda newChars2,Y
+	sta GRAPHSTART2,X
+	inx
+	iny
+	cpy #$20
+	bne loadNewChars2
 
 	jsr CLEARSCREEN
 	ldy #0
@@ -315,29 +207,38 @@ countChar:
 	.byte $0, 0
 countPixel:
 	.byte $0, 0
+	
+newChars1:									;	start replacing at GRAPHSTART2
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	SPACE ' 
+	.byte	$00,$00,$18,$3C,$7E,$7E,$18,$24	;	GOOMBA_1 '!
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	GOOMBA_2 '"
+	.byte	$FF,$81,$81,$81,$81,$81,$81,$FF	;	BOX '#
+	.byte	$FF,$81,$99,$B5,$AD,$99,$81,$FF	;	COIN_BLOCK '$
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	UNUSED '%
+	.byte	$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF	;	SOLID_BLOCK '&					
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_TL ''			
+	.byte	$3C,$3C,$18,$FF,$3C,$3C,$24,$C3	;	MARIO_BL '(								********** FIX
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_BR ')						
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_TR '*
+	.byte	$02,$36,$36,$1C,$70,$10,$28,$28 ;	KOOPA_1A '+
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	KOOPA_2A ',
+	.byte	$30,$37,$1E,$70,$10,$28,$28,$00	;	KOOPA_1B '-
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	KOOPA_2B '.
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_BL '/
+	
+	; NUMBERS WOULD GO HERE BUT DON'T NEED TO REPLACE
 
-;	.byte "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[] !", '", "#$%&'()*+,-./0123456789:;<=>?", 0
-;	#		== empty box
-; 	$		== coin box
-;	&		== solid box
-;	?		== question box
-
-;	! "		== goomba
-;	+ -		== koopa1
-;	, .		== koopa2
-
-;	' *		== mario + colliding entity
-;	/ =
-
-;	< >		== mario
-;	( )
-
+newChars2:									;	start replacing at GRAPHSTART2 + $E0
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_TL '<
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_BR '=
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_TR '>
+	.byte	$FF,$81,$9D,$A5,$89,$81,$91,$FF	;	QUESTION_BLOCK '?
+	
+	
 ; UNUSED:	% : ;
 ; Reserving 0-9
 ; Can't use ABCDEFGHIJKLMNOPQRSTUVWXYZ @ []
 
-
-
-
+	
 	
 	
