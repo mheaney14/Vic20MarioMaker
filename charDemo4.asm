@@ -268,7 +268,7 @@ collisionLoop:
 	tya
 	and GRAPHSTART2,X	; if any bits of Accumulator set then collision has occured
 
-	beq collisionOccured
+	bne collisionOccured
 	
 	inc countPixel
 	lda countPixel
