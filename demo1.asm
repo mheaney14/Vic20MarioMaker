@@ -1,6 +1,9 @@
 CHROUT		= $FFD2
 CHRIN		= $FFE4
 CLEARSCREEN = $E55F
+GRAPHSTART1	= $1C00
+GRAPHSTART2	= $1D00
+RDTIM = $FFDE
 
 	processor 6502
 	org $1001
@@ -23,347 +26,160 @@ basicend
 	ldx #$0
 loadChar1:
 	lda $8000,X		; load x from ROM
-	sta $1C00,X		; store previous char in RAM
+	sta GRAPHSTART1,X		; store previous char in RAM
 	inx				; increment x (note X is 2 bytes so this value will become 0 after $FF iterations)
 	bne loadChar1
 loadChar2:
 	lda $8100,X
-	sta $1D00,X
+	sta GRAPHSTART2,X
 	inx
 	bne loadChar2
 	
 	lda #$FF
 	sta $9005		; characters are stored at $1C00 - $1DFF and use 8 bytes of memory each
 
-;******************* Start of Graphics *******************
-; characters are 8 bytes
-; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
+	ldx #$0
+loadNewChars:
+	lda newChars1,X
+	sta GRAPHSTART2,X
+	inx
+	cpx #$81
+	bne loadNewChars
+	ldx #$E0
+	ldy #$0
+loadNewChars2:
+	lda newChars2,Y
+	sta GRAPHSTART2,X
+	inx
+	iny
+	cpy #$20
+	bne loadNewChars2
 
-;******************* Mario Character *******************
-	lda #$3C		; start of mario character (top of head)
-	sta $1C00		; start of memory location for mario (mario replaces '@ => get mario in accumulator: lda #'@)
-	lda #$3C
-	sta $1C01
-	lda #$18
-	sta $1C02
-	lda #$FF
-	sta $1C03
-	lda #$3C
-	sta $1C04
-	lda #$3C
-	sta $1C05
-	lda #$24
-	sta $1C06
-	lda #$C3		; feet
-	sta $1C07		; end memory location for mario
+	jsr CLEARSCREEN
+	ldy #0
 
-;******************* number 1 *******************
-	lda #$08		; replaces '1 (doesn't work for some reason??)
-	sta $1D88
-	lda #$18
-	sta $1D89
-	lda #$28
-	sta $1D8A
-	lda #$08
-	sta $1D8B
-	lda #$08
-	sta $1D8C
-	lda #$08
-	sta $1D8D
-	lda #$3E
-	sta $1D8E
-	lda #$00
-	sta $1D8F
-
-;******************* number 2 *******************
-	lda #$3C		; replaces '2 (doesn't work for some reason??)
-	sta $1D90
-	lda #$42
-	sta $1D91
-	lda #$02
-	sta $1D92
-	lda #$0C
-	sta $1D93
-	lda #$30
-	sta $1D94
-	lda #$40
-	sta $1D95
-	lda #$7E
-	sta $1D96
-	lda #$00
-	sta $1D97
-
-;******************* number 3 *******************
-	lda #$3C		; replaces '3 (doesn't work for some reason??)
-	sta $1D98
-	lda #$42
-	sta $1D99
-	lda #$02
-	sta $1D9A
-	lda #$1C
-	sta $1D9B
-	lda #$02
-	sta $1D9C
-	lda #$42
-	sta $1D9D
-	lda #$3C
-	sta $1D9E
-	lda #$00
-	sta $1D9F
-
-;******************* number 4 *******************
-	lda #$04		; replaces '4 (doesn't work for some reason??)
-	sta $1DA0
-	lda #$0C
-	sta $1DA1
-	lda #$14
-	sta $1DA2
-	lda #$24
-	sta $1DA3
-	lda #$7E
-	sta $1DA4
-	lda #$04
-	sta $1DA5
-	lda #$04
-	sta $1DA6
-	lda #$00
-	sta $1DA7
-
-;******************* number 5 *******************
-	lda #$7E		; replaces '5 (doesn't work for some reason??)
-	sta $1DA8
-	lda #$40
-	sta $1DA9
-	lda #$78
-	sta $1DAA
-	lda #$04
-	sta $1DAB
-	lda #$02
-	sta $1DAC
-	lda #$44
-	sta $1DAD
-	lda #$38
-	sta $1DAE
-	lda #$00
-	sta $1DAF
-
-;******************* number 6 *******************
-	lda #$1C		; replaces '6 (doesn't work for some reason??)
-	sta $1DB0
-	lda #$20
-	sta $1DB1
-	lda #$40
-	sta $1DB2
-	lda #$7C
-	sta $1DB3
-	lda #$42
-	sta $1DB4
-	lda #$42
-	sta $1DB5
-	lda #$3C
-	sta $1DB6
-	lda #$00
-	sta $1DB7
-
-;******************* number 7 *******************
-	lda #$7E		; replaces '7 (doesn't work for some reason??)
-	sta $1DB8
-	lda #$42
-	sta $1DB9
-	lda #$04
-	sta $1DBA
-	lda #$08
-	sta $1DBB
-	lda #$10
-	sta $1DBC
-	lda #$10
-	sta $1DBD
-	lda #$10
-	sta $1DBE
-	lda #$00
-	sta $1DBF
-
-;******************* number 8 *******************
-	lda #$3C		; replaces '8 (doesn't work for some reason??)
-	sta $1DC0
-	lda #$42
-	sta $1DC1
-	lda #$42
-	sta $1DC2
-	lda #$3C
-	sta $1DC3
-	lda #$42
-	sta $1DC4
-	lda #$42
-	sta $1DC5
-	lda #$3C
-	sta $1DC6
-	lda #$00
-	sta $1DC7
-
-;******************* number 9 *******************
-	lda #$3C		; replaces '9 (doesn't work for some reason??)
-	sta $1DC8
-	lda #$42
-	sta $1DC9
-	lda #$42
-	sta $1DCA
-	lda #$3E
-	sta $1DCB
-	lda #$02
-	sta $1DCC
-	lda #$04
-	sta $1DCD
-	lda #$38
-	sta $1DCE
-	lda #$00
-	sta $1DCF
-
-;******************* Mario Character *******************
-	lda #$3C		; start of mario character (top of head)
-	sta $1C00		; start of memory location for mario (mario replaces '@ => get mario in accumulator: lda #'@)
-	lda #$3C
-	sta $1C01
-	lda #$18
-	sta $1C02
-	lda #$FF
-	sta $1C03
-	lda #$3C
-	sta $1C04
-	lda #$3C
-	sta $1C05
-	lda #$24
-	sta $1C06
-	lda #$C3		; feet
-	sta $1C07		; end memory location for mario
 	
-;******************* Koopa 1 Character *******************
-	lda #$02		; replaces '[
-	sta $1CD8
-	lda #$36
-	sta $1CD9
-	lda #$36
-	sta $1CDA
-	lda #$1C
-	sta $1CDB
-	lda #$70
-	sta $1CDC
-	lda #$10
-	sta $1CDD
-	lda #$28
-	sta $1CDE
-	lda #$28
-	sta $1CDF
-	
-;******************* Koopa 2 Character *******************
-	lda #$30		; replaces ']
-	sta $1CE8
-	lda #$37
-	sta $1CE9
-	lda #$1E
-	sta $1CEA
-	lda #$70
-	sta $1CEB
-	lda #$10
-	sta $1CEC
-	lda #$28
-	sta $1CED
-	lda #$28
-	sta $1CEE
-	lda #$00
-	sta $1CEF
-	
-;******************* Goomba *******************
-	lda #$00		; replaces '<
-	sta $1DE0
-	lda #$00
-	sta $1DE1
-	lda #$18
-	sta $1DE2
-	lda #$3C
-	sta $1DE3
-	lda #$7E
-	sta $1DE4
-	lda #$7E
-	sta $1DE5
-	lda #$18
-	sta $1DE6
-	lda #$24
-	sta $1DE7
-	
-;******************* Box *******************
-	lda #$FF		; replaces '# can be used as selector
-	sta $1D18
-	lda #$81
-	sta $1D19
-	lda #$81
-	sta $1D1A
-	lda #$81
-	sta $1D1B
-	lda #$81
-	sta $1D1C
-	lda #$81
-	sta $1D1D
-	lda #$81
-	sta $1D1E
-	lda #$FF
-	sta $1D1F
-	
-;******************* Block *******************
-	lda #$FF		; replaces '&
-	sta $1D30
-	lda #$FF
-	sta $1D31
-	lda #$FF
-	sta $1D32
-	lda #$FF
-	sta $1D33
-	lda #$FF
-	sta $1D34
-	lda #$FF
-	sta $1D35
-	lda #$FF
-	sta $1D36
-	lda #$FF
-	sta $1D37
-	
-;******************* Coin Block *******************
-	lda #$FF		; replaces '$
-	sta $1D20
-	lda #$81
-	sta $1D21
-	lda #$99
-	sta $1D22
-	lda #$B5
-	sta $1D23
-	lda #$AD
-	sta $1D24
-	lda #$99
-	sta $1D25
-	lda #$81
-	sta $1D26
-	lda #$FF
-	sta $1D27
 
-;******************* Question Block *******************
-	lda #$FF		; replaces '?
-	sta $1DF8
-	lda #$81
-	sta $1DF9
-	lda #$9D
-	sta $1DFA
-	lda #$A5
-	sta $1DFB
-	lda #$89
-	sta $1DFC
-	lda #$81
-	sta $1DFD
-	lda #$91
-	sta $1DFE
-	lda #$FF
-	sta $1DFF
 
-;******************* End of Graphics *******************
+; moveMyChar:
+; 	ldx #$08			; HERE FOR TESTING
+; 	ldy #$10			; HERE FOR TESTING (moves goomba)
+; moveRight:		; store address of characters to move right in x and y
+; 	lda #$01
+; 	and GRAPHSTART2,Y
+; 	lsr			; set carry bit to bit 0 of Y (automatically uses accumulator)
+; 	ror GRAPHSTART2,X
+; 	txa
+; 	pha			; push X to stack
+; 	tya
+; 	tax			; put Y in X register
+; 	ror GRAPHSTART2,X
+; 	pla
+; 	tax			; put X back from stack
+; 	inx			; move next line of character
+; 	iny
+; 	txa
+; 	and #$07	; if more lines need to be done (x ends with a number 1-7 or 9-F, 0/8 => done)
+; 	bne moveRight
+	
+; 	ldx #0
+; 	lda #$10	; overlap space with all mario places
+; overlapSetUp:
+; 	sta overChars,X
+; 	inx
+; 	cpx #4
+; 	bne overlapSetUp
+; 	jmp marioOverlap
+	
+; marioOverlap:	; 4 character starting locations, top left, top right, bottom left and bottom right collision chars (-$1D00) stored in overChars
+; 	lda #0			; counter for mario char to add to overlap
+; 	sta countChar
+; 	sta countPixel
+; OverlapLoop:
+; 	ldx countChar
+; 	lda marMem,X		; mar[countChar] memory location
+; 	clc
+; 	adc countPixel
+; 	tax
+; 	ldy GRAPHSTART2,X	; countPixel row of pixels in countChar area of Mario
+; 	ldx countChar
+; 	lda overChars,X		; overChars[countChar] memory location
+; 	clc
+; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
+; 	tax	
+; 	tya
+; 	ora GRAPHSTART2,X	; new row of pixels
+; 	tay
+; 	ldx countChar
+; 	lda overMem,X		; overMem[countChar] memory location
+; 	clc
+; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
+; 	tax
+; 	tya
+; 	sta GRAPHSTART2,X
+; 	inc countPixel
+; 	lda countPixel
+; 	cmp #8				; if more rows of pixels are needed
+; 	bne OverlapLoop		; go and loop again
+; 	lda #0				; reset pixel rows count
+; 	sta countPixel
+; 	inc countChar
+; 	lda countChar
+; 	cmp #4				; if more characters need to be overlapped
+; 	bne OverlapLoop		; go and loop again	
+	
+; 	jmp getKeyInput
+; jmpMoveMyChar:
+; 	jmp moveMyChar
+	
+; charCollision:
+; 	lda #0			; counter for mario char to add to overlap
+; 	sta countChar
+; 	sta countPixel
+; collisionLoop:
+; 	ldx countChar
+; 	lda marMem,X		; mar[countChar] memory location
+; 	clc
+; 	adc countPixel
+; 	tax
+; 	ldy GRAPHSTART2,X	; countPixel row of pixels in countChar area of Mario
+; 	ldx countChar
+; 	lda overChars,X		; overChars[countChar] memory location
+; 	clc
+; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
+; 	tax	
+; 	tya
+; 	and GRAPHSTART2,X	; if any bits of Accumulator set then collision has occured
+
+; 	bne collisionOccured
+	
+; 	inc countPixel
+; 	lda countPixel
+; 	cmp #8				; if more rows of pixels are needed
+; 	bne collisionLoop		; go and loop again
+; 	lda #0				; reset pixel rows count
+; 	sta countPixel
+; 	inc countChar
+; 	lda countChar
+; 	cmp #4				; if more characters need to be overlapped
+; 	bne collisionLoop		; go and loop again	
+; 	jmp getKeyInput
+	
+; collisionOccured:
+; 	lda #'@
+; 	jsr CHROUT
+; 	jmp end	
+	
+	
+; getKeyInput:
+; 	lda #0
+; 	jsr	CHRIN
+; 	cmp #'W		; if w pressed 
+; 	beq jmpMoveMyChar
+; 	cmp #'C		; if c pressed 
+; 	beq charCollision
+; 	jmp getKeyInput
+
 
 	; jsr $e55f		; clear screen
 start:		
@@ -382,7 +198,8 @@ printSpacesMenu:
 	cpx #0			; check if more spaces to print
 	bne printSpacesMenu
 	ldy #0
-	
+
+
 printMenu1:
 	lda menuMessage1,Y
 	cmp #0			; if there is more message to print
@@ -416,16 +233,15 @@ cll:				;Printing the white screen among the black background
     dex
     bne cll
 
-	lda #'@			; load mario
+	lda #'*  			; load mario
 	jsr CHROUT		; print char in accumulator
+	lda #'/=' 
+	jsr CHROUT
 	
 	lda #1
 	sta $0110
 
 main:
-	jsr	music
-
-userInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
@@ -442,65 +258,54 @@ userInput:
 	beq jumpToNKey
 	jmp main		; If there is no input
 
-
-waitLoop:
-	iny 
-	cpy #20
-	bne waitLoop
-	rts
-
-music:
-	lda #2
-	sta $900e
-	lda #159
-	sta $900c
-	ldy #0	
-	jsr waitLoop
-	lda #179
-	sta $900c
-	ldy #0
-	jsr waitLoop
-	lda #199
-	sta $900c
-	ldy #0
-	jsr waitLoop
-	rts
-
 mainEnd:
 	jsr CLEARSCREEN
 	jmp end
 
 ;The codes are too long that we can't directly branching out
 jumpToWKey:
-	jmp wKey
+	lda #1
+	sta $0101
+	jmp jmpEnd
 jumpToAKey:
-	jmp aKey
+	lda #2
+	sta $0101
+	jmp jmpEnd
 jumpToSKey:
-	jmp sKey
+	lda #3
+	sta $0101
+	jmp jmpEnd
 jumpToDKey:
-	jmp dKey
+	lda #4
+	sta $0101
+	jmp jmpEnd
 jumpToQKey:
-	jmp qKey
+	lda #5
+	sta $0101
+	jmp jmpEnd
 jumpToNKey:
-	jmp nKey
+	lda #6
+	sta $0101
+	jmp jmpEnd
+jmpEnd:
 
 nKey:				;Press N to create a new block
-
-	ldx $0012
-	lda $D1 
-	sta $0013,x
-	ldx $0012
-	inx 
-	stx $0012
-
-	ldx $0012
-	lda $D3 
-	sta $0013,x 
-	ldx $0012 
-	inx 
-	stx $0012
-
+	ldy $0101
+	cpy #6
+	bne nkeyInput
+	ldy #0
+	lda $0113
+	adc #1
+	sta $0113
+	ldx $0113
 nKeyIncrease:
+	inx
+	iny
+	iny
+	iny
+	cpx $0113
+	bne nKeyIncrease
+	iny
 	lda $0111
 	sta $0113,y
 	iny 
@@ -517,6 +322,9 @@ nKeyIncrease:
 	sta $0112
 	; get input for the item index
 nkeyInput:
+	ldy $0101
+	cpy #6
+	bne qKey
 
 	lda #0
 	jsr	CHRIN
@@ -540,44 +348,51 @@ nkeyInput:
 Key1:					;Some extra function that needed to work on later
 	lda #1
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key2:
 	lda #2
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key3:
 	lda #3
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key4:
 	lda #4
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key5:
 	lda #5
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key6:
 	lda #6
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key7:
 	lda #7
 	sta $0110
-	jmp drawing
+	jmp nKeyEnd
 Key8:
 	lda #8
 	sta $0110
+nKeyEnd:
 	jmp drawing
 
 qKey:						;When user hit Q, quit the game and print end game message
+	ldy $0101
+	cpy #5
+	bne dKey				;The codes are too long so how to do another branching
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
 	jsr CLEARSCREEN
-	jmp end
+	jmp start
 
 dKey:						;press D to move right
+	ldy $0101
+	cpy #4
+	bne wKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -601,6 +416,9 @@ dKeyDown:
 	jmp drawing
 
 wKey:
+	ldy $0101
+	cpy #1
+	bne aKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -634,6 +452,9 @@ jumpToDrawing:
 	rts
 
 aKey:
+	ldy $0101
+	cpy #2
+	bne sKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -658,6 +479,9 @@ aKeyUp:
 
 ; offset is 242 to make it correctly
 sKey:
+	ldy $0101
+	cpy #3
+	bne sound
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -687,22 +511,10 @@ sKeyEnd:
 	jmp sKey1
 
 sound:
-	lda #15
-	sta $900e
 	lda #168
 	sta $900c		; -- effect sound if input
-	ldx #0
-soundLoop:
-	ldy #0
-soundLoop2:
-	iny
-	cpy #200
-	bne soundLoop2
-	inx
-	cpx #50
-	bne soundLoop
 	lda #0
-	sta $900e
+	sta $900c
 	jmp	main
 
 drawing:
@@ -753,7 +565,6 @@ drawingOut:
 	jsr CHROUT
 	jmp sound 
 
-
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
 	CMP #0
@@ -768,8 +579,6 @@ endPrintEndGameMessage:
 	jmp end
 
 end:
-	lda #0
-	sta $900e
 	jmp end
 		
 endGameMessage:
@@ -778,3 +587,44 @@ menuMessage1:
 	.byte "SUPER MARIO MAKER   PRESS ANY KEY TO PLAY", 0	
 menuMessage2:
 	.byte " PRESS ANY KEY TO PLAY  ", 0	
+
+chars:
+	.byte "& <> & '* & +- &      ","& () & /= &    &      &    & !",'","             &    &                ", 0
+
+marMem:
+	.byte $E0,$F0,$40,$48, 0	; Starts at $1DE0, $1DF0, $1D40 and $1D48
+overMem:
+	.byte $38,$50,$78,$E8, 0	; Starts at $1D38, $1D50, $1D78, $1DE8
+overChars:
+	.byte $00,$00,$00,$00, 0
+
+countChar:
+	.byte $0, 0
+countPixel:
+	.byte $0, 0
+	
+newChars1:									;	start replacing at GRAPHSTART2
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	SPACE ' 
+	.byte	$00,$00,$18,$3C,$7E,$7E,$18,$24	;	GOOMBA_1 '!
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	GOOMBA_2 '"
+	.byte	$FF,$81,$81,$81,$81,$81,$81,$FF	;	BOX '#
+	.byte	$FF,$81,$99,$B5,$AD,$99,$81,$FF	;	COIN_BLOCK '$
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	UNUSED '%
+	.byte	$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF	;	SOLID_BLOCK '&					
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_TL ''			
+	.byte	$3C,$3C,$18,$FF,$3C,$3C,$24,$C3	;	MARIO_BL '(								********** FIX
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_BR ')						
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_TR '*
+	.byte	$02,$36,$36,$1C,$70,$10,$28,$28 ;	KOOPA_1A '+
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	KOOPA_2A ',
+	.byte	$30,$37,$1E,$70,$10,$28,$28,$00	;	KOOPA_1B '-
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	KOOPA_2B '.
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_BL '/
+	
+	; NUMBERS WOULD GO HERE BUT DON'T NEED TO REPLACE
+
+newChars2:									;	start replacing at GRAPHSTART2 + $E0
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_TL '<
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_BR '=
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_TR '>
+	.byte	$FF,$81,$9D,$A5,$89,$81,$91,$FF	;	QUESTION_BLOCK '?
