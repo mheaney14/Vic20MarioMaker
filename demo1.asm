@@ -258,7 +258,8 @@ drLifeDone:
 
 createMode:				;Printing the white screen among the black background
 	jsr CLEARSCREEN
-
+	lda #0
+	sta $1011
 
 	ldy #-1
 	jsr drawingBlock
@@ -445,8 +446,89 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
-	jsr CLEARSCREEN
+
+doneEndMessageInit:
+	lda #4
+	sta $1007
+doneEndMessage:
+	ldy #5
+	ldx $1007
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+
+
+qInput:
+	lda #0
+	jsr CHRIN
+	cmp #'W
+	beq endUp
+	cmp #'S
+	beq endDown
+	cmp #' 
+	beq endSelect
+	jmp doneEndMessage
+	
+endUp:
+	lda $1007
+	cmp #4
+	beq endUpEnd
+	ldx $1007
+	ldy #5
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	ldx $1007
+	dex 
+	dex
+	stx $1007
+	jmp qInput
+endUpEnd:
+	ldx $1007
+	ldy #5
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda #6
+	sta $1007
+	jmp qInput
+
+endDown:
+	lda $1007
+	cmp #6
+	beq endDownEnd
+	ldx $1007
+	ldy #5
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda $1007
+	adc #2
+	sta $1007
+	jmp qInput
+endDownEnd:
+	ldx $1007
+	ldy #5
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda #4
+	sta $1007
+	jmp qInput
+endSelect:	
+	lda $1007
+	cmp #4
+	beq jumpToPlayCreatedMap
+	cmp #6
 	jmp start
+
+jumpToPlayCreatedMap:
+	jmp playCreatedMap
 
 dKey:						;press D to move right
 	; Check if the current position is at the end of the line, if yes go back to userInput
@@ -495,6 +577,9 @@ aKeyEnd:
 	jmp userInput
 
 sKey:
+	lda $1006
+	cmp #22
+	beq sKeyEnd
 	lda $1007
 	cmp #22
 	beq sKeyEnd
@@ -574,13 +659,25 @@ endPrintEndGameMessage:
 	lda #0
 	jsr CHRIN
 	BEQ endPrintEndGameMessage
-	jmp end
+	jmp	doneEndMessageInit
+
+playCreatedMap:
+	jsr CLEARSCREEN
+	ldy $1013
+	ldx $1014
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+
+
+
 
 end:
 	jmp end
 		
 endGameMessage:
-	.byte "END GAME", 0
+	.byte "WHAT WOULD YOU LIKE TO        DO?                                                             PLAY THE MAP                                END GAME", 0
 menuMessage1:
 	.byte "SUPER MARIO MAKER ?                                                                         PLAY MODE                                  CREATE MODE                                 PLAY CREATED", 0
 
