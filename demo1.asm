@@ -582,3 +582,33 @@ newChars2:									;	start replacing at GRAPHSTART2 + $E0
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_BR '=
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_TR '>
 	.byte	$FF,$81,$9D,$A5,$89,$81,$91,$FF	;	QUESTION_BLOCK '?
+	
+MARIO_C:
+	.byte "'*/="
+MARIO_OVLP_C:
+	.byte "<>()"
+GOOMBA_C:
+	.byte "!",'"
+KOOPA1_C:
+	.byte "+,"
+KOOPA2_C:
+	.byte "-."
+BOX_C:
+	.byte "#"
+COIN_BLOCK_C:
+	.byte "$"
+SOLID_BLOCK_C:
+	.byte "&"
+QUESTION_BLOCK_C:
+	.byte "?"
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
