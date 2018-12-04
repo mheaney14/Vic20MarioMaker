@@ -217,7 +217,7 @@ printMap1End:
 	jsr $fff0
 	lda #'&
 	jsr CHROUT
-	
+
 	ldx #3
 	stx $1003
 	jsr displayLives
@@ -263,12 +263,15 @@ createMode:				;Printing the white screen among the black background
 	ldy #-1
 	jsr drawingBlock
 
-	ldx #0
-	stx $1006
+	; 1006 = x position, 1007 is y position, 1008 is the current symbol
+	lda #1
+	sta $1008
 	ldy #0
-	sty $1007
-	ldx $1006
-	ldy $1007
+	sty $1006
+	ldx #0
+	stx $1007
+	ldy $1006
+	ldx $1007
 	clc
 	jsr $FFF0
 	lda #'@			; load mario
@@ -308,7 +311,7 @@ userInput:
 	beq jumpToQKey
 	cmp #'N
 	beq jumpToNKey
-	jmp main		; If there is no input
+	jmp userInput		; If there is no input
 
 
 waitLoop:
@@ -338,7 +341,7 @@ mainEnd:
 	jsr CLEARSCREEN
 	jmp end
 
-;The codes are too long that we can't directly branching out
+; ;The codes are too long that we can't directly branching out
 jumpToWKey:
 	jmp wKey
 jumpToAKey:
@@ -355,36 +358,34 @@ jumpToNKey:
 nKey:				;Press N to create a new block
 	;Saving the x position to stack, increment stack counter
 	ldx $1011
-	lda $D1 
+	lda $1006
 	sta $1013,x
 	ldx $1011
 	inx 
 	stx $1011
 
+	; Save the y position to stack, increment stack counter by 1
 	ldx $1011
-	lda $D3 
+	lda $1007 
 	sta $1013,x 
 	ldx $1011 
 	inx 
 	stx $1011
 
-nKeyIncrease:
-	lda $0111
-	sta $0113,y
-	iny 
-	lda $0112
-	sta $0113,y
-	iny
-	lda $0110
-	sta $0113,y
-	lda #0
-	sta $0110
-	lda #0
-	sta $0111
-	lda #0
-	sta $0112
-	; get input for the item index
+	; Save the type of character in the stack, increment by 1
+	ldx $1011
+	lda $1008
+	sta $1013,x
+	ldx $1011
+	inx
+	stx $1011
+
 nkeyInput:
+	; Reset the $1006 $1007 memory
+	lda #0
+	sta $1006
+	lda #0
+	sta $1007
 
 	lda #0
 	jsr	CHRIN
@@ -407,37 +408,38 @@ nkeyInput:
 	jmp nkeyInput
 Key1:					;Some extra function that needed to work on later
 	lda #1
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key2:
 	lda #2
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key3:
 	lda #3
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key4:
 	lda #4
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key5:
 	lda #5
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key6:
 	lda #6
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key7:
 	lda #7
-	sta $0110
-	jmp drawing
+	sta $1008
+	jmp jumpDrawing
 Key8:
 	lda #8
-	sta $0110
-	jmp drawing
-
+	sta $1008
+jumpDrawing:
+	jsr drawing
+	jmp userInput
 
 qKey:						;When user hit Q, quit the game and print end game message
 	jsr CLEARSCREEN			;clear screen
@@ -447,120 +449,71 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jmp start
 
 dKey:						;press D to move right
+	; Check if the current position is at the end of the line, if yes go back to userInput
+	lda $1006
+	cmp #21
+	beq dKeyEnd
+	; Erase the current position Mario
+	jsr clearCharacter
+	; Otherwise increment x position by 1 
 	ldx $1006
-	ldy $1007
-	clc
-	jsr $FFF0
-	lda #' 
-	jsr CHROUT
+	inx
+	stx $1006
+	jsr drawing
+dKeyEnd:
+	jmp userInput
 
-	lda $0111
-	cmp #255
-	beq dKeyDown
-	lda $0111
-	adc #1
-	sta $0111
-	jmp drawing
-dKeyDown:
-	lda $0112
-	cmp #255
-	beq jumpToDrawing
-	lda $0112
-	adc #1
-	sta $0112
-	jmp drawing
 
 wKey:
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #' 
-	jsr CHROUT
-	ldx #0
-wKey1:
-	lda $0112
-	sbc #1
-	sta $0112
-	jmp wkeyEnd
-wKey2:
-	lda $0111
+	; If y = 0 then you can't move up and thus the move can't be made
+	lda $1007 
 	cmp #0
-	beq wkeyEnd
-	lda $0111
-	sbc #1
-	sta $0111
-wkeyEnd:
-	cpx #21
-	beq jumpToDrawing
-	inx 
-	jmp wKey1
-
-jumpToDrawing:
-	jmp drawing
-	rts
+	beq wKeyEnd
+	; Erase the current position Mario
+	jsr clearCharacter
+	; y = y - 1, store back into 1007
+	ldx $1007
+	dex
+	stx $1007
+	; go to drawing
+	jsr drawing
+wKeyEnd:
+	jmp userInput
 
 aKey:
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #' 
-	jsr CHROUT
-	lda $0112
+	; Check if x = 0 then you can't move left anymore, go back to userInput
+	lda $1006
 	cmp #0
-	beq aKeyUp
-	lda $0112
-	sbc #1
-	sta $0112
-	jmp drawing
-aKeyUp:
-	lda $0111
-	cmp #0
-	beq drawing
-	lda $0111
-	sbc #1
-	sta $0111
-	jmp drawing
+	beq aKeyEnd
+	; Otherwise clearCharacter, decrement x by 1 and go to drawing
+	jsr clearCharacter
+	ldx $1006
+	dex
+	stx $1006
+	jsr drawing
+aKeyEnd:
+	jmp userInput
 
-; offset is 242 to make it correctly
 sKey:
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-	lda #' 
-	jsr CHROUT
-	ldx #0
-sKey1:
-	lda $0111
-	cmp #255
-	beq sKey2
-	lda $0111
-	adc #1
-	sta $0111
-	jmp sKeyEnd
-sKey2:
-	lda $0112
-	cmp #255
+	lda $1007
+	cmp #22
 	beq sKeyEnd
-	lda $0112
-	adc #1
-	sta $0112
-sKeyEnd:
-	cpx #21
-	beq drawing
+	jsr clearCharacter
+	ldx $1007
 	inx
-	jmp sKey1
-
+	stx $1007
+	jsr drawing
+sKeyEnd:
+	jmp userInput
 
 drawing:
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
-decideSymbol:
-	lda $0110
+	ldy $1006
+	ldx $1007
+	clc 
+	jsr $FFF0
+
+	; Check $1008 for the current symbol needed to be drawn
+	lda $1008
 	cmp #1
 	bne drawNext1
 	lda #'@
@@ -597,10 +550,18 @@ drawNext6:
 	jmp drawingOut
 drawNext7:
 	lda #'?
-
 drawingOut:
 	jsr CHROUT
-	jmp userInput 
+	rts 
+
+clearCharacter:
+	ldy $1006
+	ldx $1007
+	clc
+	jsr $FFF0
+	lda #' 
+	jsr CHROUT
+	rts
 
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
