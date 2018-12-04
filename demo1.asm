@@ -442,11 +442,12 @@ jumpDrawing:
 	jsr drawing
 	jmp userInput
 
-qKey:						;When user hit Q, quit the game and print end game message
+qKey:			;When user hit Q,  end game message, and allow player to choose betwwen 							end game or play created map
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
 
+; After finished writing the message, init choosing option
 doneEndMessageInit:
 	lda #4
 	sta $1007
@@ -458,7 +459,7 @@ doneEndMessage:
 	lda #'@
 	jsr CHROUT
 
-
+;Getting user input, W S to move up down, space to enter 
 qInput:
 	lda #0
 	jsr CHRIN
@@ -576,13 +577,13 @@ aKey:
 aKeyEnd:
 	jmp userInput
 
+; Move down
 sKey:
-	lda $1006
-	cmp #22
-	beq sKeyEnd
+	; You can't go down if you're at the bottom of the screen
 	lda $1007
 	cmp #22
 	beq sKeyEnd
+	; if you're not at the bottom, clear the screen, increment y position and draw
 	jsr clearCharacter
 	ldx $1007
 	inx
@@ -663,13 +664,66 @@ endPrintEndGameMessage:
 
 playCreatedMap:
 	jsr CLEARSCREEN
-	ldy $1013
-	ldx $1014
-	clc 
+	lda $1011
+	sta $1012
+	lda #0
+	sta $1011
+
+drawCreatedMap:
+	lda $1011
+	cmp $1012
+	beq doneDrawMap
+
+	ldx $1011
+	lda $1013,x
+	inx
+	stx $1011
+	sta $1006
+	
+	ldx $1011
+	lda $1013,x
+	inx
+	stx $1011
+	sta $1007
+
+	ldx $1011
+	lda $1013,x
+	sta $1008
+	
+	ldx $1007
+	ldy $1006
+	lda $1008
+	cmp #1
+	beq draw1
+	cmp #2
+	beq draw2
+	clc
+	jsr $FFF0
+	lda #'%
+	jsr CHROUT
+	jmp last
+
+draw1:
+	clc
 	jsr $FFF0
 	lda #'@
 	jsr CHROUT
+	jmp	last
+draw2
+	clc
+	jsr $FFF0
+	lda #'#
+	jsr CHROUT
+	jmp last
+last:
+	ldy $1011
+	iny 
+	sty $1011
+	jmp drawCreatedMap
 
+
+doneDrawMap:
+	jmp end
 
 
 
