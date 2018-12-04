@@ -162,13 +162,13 @@ menuSelect:
 	cmp #12
 	beq toPlayMode
 	cmp #14
-	beq createMode
+	beq toCreateMode
 ; 	cmp #16
 ; 	beq toPlayCreated
 toPlayMode:
 	jmp playModeInit
-; toCreateMode:
-; 	jmp createMode
+toCreateMode:
+	jmp createMode
 ; toPlayCreated:
 ; 	jmp PlayCreated
 
@@ -179,7 +179,53 @@ playModeInit:
 	ldy #0
 	jsr CLEARSCREEN
 
+	ldy #0
+printMap1:
+	lda GameMap1,y
+	cmp #0			
+	beq printMap1RestInit
+	JSR CHROUT
+	iny
+	jmp printMap1
+printMap1RestInit:
+	ldy #0
+printMap1Rest:
+	lda GameMap1+243,y
+	cmp #0			
+	beq printMap1FinalInit
+	JSR CHROUT
+	iny
+	jmp printMap1Rest
+printMap1FinalInit:
+	ldy #0
+printMap1Final:
+	lda GameMap1+486,y
+	cmp #0			
+	beq printMap1End
+	JSR CHROUT
+	iny
+	jmp printMap1Final
+printMap1End:
+	ldx #21
+	ldy #43
+	clc 
+	jsr $fff0
+	lda #'&
+	jsr CHROUT
+
+	jmp end
+
+
 createMode:				;Printing the white screen among the black background
+
+; cll:				;Printing the white screen among the black background
+;     lda #32+128
+;     sta 7680,x      ; screen memory
+;     sta 7680+256,x
+;     dex
+;     bne cll
+	ldx #0
+	ldy #0
 	jsr CLEARSCREEN
 	lda #'#
 	jsr CHROUT
@@ -601,6 +647,31 @@ SOLID_BLOCK_C:
 	.byte "&"
 QUESTION_BLOCK_C:
 	.byte "?"
+
+GameMap1:
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      "
+	.byte "                      ",0
+	.byte "                      "
+	.byte "                      "
+	.byte "              ?       "
+	.byte "                      "
+	.byte "                      "
+	.byte "    #        ]     [  "
+	.byte "&&&&&&  &&&&&&&&&&&&&&"
+	.byte "&&&&&&  &&&&&&&&&&&&&&"
+	.byte "&&&&&&  &&&&&&&&&&&&&&"
+	.byte "&&&&&&  &&&&&&&&&&&&&&"
+	.byte "&&&&&&  &&&&&&&&&&&&&&",0
+	.byte "&&&&&&  &&&&&&&&&&&&&",0
 
 	
 	
