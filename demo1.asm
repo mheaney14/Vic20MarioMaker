@@ -178,7 +178,12 @@ playModeInit:
 	ldx #0
 	ldy #0
 	jsr CLEARSCREEN
+	
 
+	ldx #0
+	ldy #0
+	clc
+	jsr $FFF0
 	ldy #0
 printMap1:
 	lda GameMap1,y
@@ -212,20 +217,48 @@ printMap1End:
 	jsr $fff0
 	lda #'&
 	jsr CHROUT
+	
+	ldx #3
+	stx $1003
+	jsr displayLives
 
 	jmp end
 
 
+displayLives:
+	ldx $1003
+	cpx #1
+	beq drOneLife
+	cpx #2
+	beq drOneLife
+	cpx #3
+	beq drThreeLife
+	jmp drLifeDone
+drThreeLife:
+	ldx #0
+	ldy #2
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drTwoLife:
+	ldy #1
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drOneLife:
+	ldy #0
+	clc
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drLifeDone:
+	rts
+
 createMode:				;Printing the white screen among the black background
 	jsr CLEARSCREEN
-    lda #32+128
-    sta 7680,x      ; screen memory
-    sta 7680+256,x
-    dex
-    bne createMode
 
-	lda #1
-	sta $0110
 
 	ldy #-1
 	jsr drawingBlock
@@ -407,9 +440,6 @@ Key8:
 
 
 qKey:						;When user hit Q, quit the game and print end game message
-	ldy $0101
-	cpy #5
-	bne dKey				;The codes are too long so how to do another branching
 	jsr CLEARSCREEN			;clear screen
 	LDY #0
 	jmp printEndGameMessage
@@ -417,15 +447,13 @@ qKey:						;When user hit Q, quit the game and print end game message
 	jmp start
 
 dKey:						;press D to move right
-	ldy $0101
-	cpy #4
-	bne wKey
-	ldx $0111
-	stx $D1
-	ldx $0112
-	stx $D3
+	ldx $1006
+	ldy $1007
+	clc
+	jsr $FFF0
 	lda #' 
 	jsr CHROUT
+
 	lda $0111
 	cmp #255
 	beq dKeyDown
@@ -443,9 +471,6 @@ dKeyDown:
 	jmp drawing
 
 wKey:
-	ldy $0101
-	cpy #1
-	bne aKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -454,9 +479,6 @@ wKey:
 	jsr CHROUT
 	ldx #0
 wKey1:
-	lda $0112
-	cmp #0
-	beq wKey2
 	lda $0112
 	sbc #1
 	sta $0112
@@ -479,9 +501,6 @@ jumpToDrawing:
 	rts
 
 aKey:
-	ldy $0101
-	cpy #2
-	bne sKey
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -506,9 +525,6 @@ aKeyUp:
 
 ; offset is 242 to make it correctly
 sKey:
-	ldy $0101
-	cpy #3
-	bne sound
 	ldx $0111
 	stx $D1
 	ldx $0112
@@ -537,12 +553,6 @@ sKeyEnd:
 	inx
 	jmp sKey1
 
-sound:
-	lda #168
-	sta $900c		; -- effect sound if input
-	lda #0
-	sta $900c
-	jmp	main
 
 drawing:
 	ldx $0111
@@ -590,7 +600,7 @@ drawNext7:
 
 drawingOut:
 	jsr CHROUT
-	jmp sound 
+	jmp userInput 
 
 printEndGameMessage:				;Print end game message
 	LDA endGameMessage,Y
