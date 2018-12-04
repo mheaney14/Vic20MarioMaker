@@ -217,23 +217,48 @@ printMap1End:
 
 
 createMode:				;Printing the white screen among the black background
-
-; cll:				;Printing the white screen among the black background
-;     lda #32+128
-;     sta 7680,x      ; screen memory
-;     sta 7680+256,x
-;     dex
-;     bne cll
-	ldx #0
-	ldy #0
 	jsr CLEARSCREEN
-	lda #'#
-	jsr CHROUT
+    lda #32+128
+    sta 7680,x      ; screen memory
+    sta 7680+256,x
+    dex
+    bne createMode
+
+	lda #1
+	sta $0110
+
+	ldy #-1
+	jsr drawingBlock
+
+	ldx #0
+	stx $1006
+	ldy #0
+	sty $1007
+	ldx $1006
+	ldy $1007
+	clc
+	jsr $FFF0
+	lda #'@			; load mario
+	jsr CHROUT		; print char in accumulator
+
+
 
 main:
-	jmp music
+	jsr	music
 	jmp userInput
+drawingBlock:
+	cpy #43
+	bne drawingBlockLoop
+	rts
 
+drawingBlockLoop:
+	iny
+	ldx #21
+	CLC
+	JSR $FFF0
+	lda #'#
+	jsr CHROUT
+	jmp drawingBlock
 
 userInput:
 	lda #0
