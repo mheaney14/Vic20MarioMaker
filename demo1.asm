@@ -60,128 +60,6 @@ loadNewChars2:
 
 	
 
-
-; moveMyChar:
-; 	ldx #$08			; HERE FOR TESTING
-; 	ldy #$10			; HERE FOR TESTING (moves goomba)
-; moveRight:		; store address of characters to move right in x and y
-; 	lda #$01
-; 	and GRAPHSTART2,Y
-; 	lsr			; set carry bit to bit 0 of Y (automatically uses accumulator)
-; 	ror GRAPHSTART2,X
-; 	txa
-; 	pha			; push X to stack
-; 	tya
-; 	tax			; put Y in X register
-; 	ror GRAPHSTART2,X
-; 	pla
-; 	tax			; put X back from stack
-; 	inx			; move next line of character
-; 	iny
-; 	txa
-; 	and #$07	; if more lines need to be done (x ends with a number 1-7 or 9-F, 0/8 => done)
-; 	bne moveRight
-	
-; 	ldx #0
-; 	lda #$10	; overlap space with all mario places
-; overlapSetUp:
-; 	sta overChars,X
-; 	inx
-; 	cpx #4
-; 	bne overlapSetUp
-; 	jmp marioOverlap
-	
-; marioOverlap:	; 4 character starting locations, top left, top right, bottom left and bottom right collision chars (-$1D00) stored in overChars
-; 	lda #0			; counter for mario char to add to overlap
-; 	sta countChar
-; 	sta countPixel
-; OverlapLoop:
-; 	ldx countChar
-; 	lda marMem,X		; mar[countChar] memory location
-; 	clc
-; 	adc countPixel
-; 	tax
-; 	ldy GRAPHSTART2,X	; countPixel row of pixels in countChar area of Mario
-; 	ldx countChar
-; 	lda overChars,X		; overChars[countChar] memory location
-; 	clc
-; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
-; 	tax	
-; 	tya
-; 	ora GRAPHSTART2,X	; new row of pixels
-; 	tay
-; 	ldx countChar
-; 	lda overMem,X		; overMem[countChar] memory location
-; 	clc
-; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
-; 	tax
-; 	tya
-; 	sta GRAPHSTART2,X
-; 	inc countPixel
-; 	lda countPixel
-; 	cmp #8				; if more rows of pixels are needed
-; 	bne OverlapLoop		; go and loop again
-; 	lda #0				; reset pixel rows count
-; 	sta countPixel
-; 	inc countChar
-; 	lda countChar
-; 	cmp #4				; if more characters need to be overlapped
-; 	bne OverlapLoop		; go and loop again	
-	
-; 	jmp getKeyInput
-; jmpMoveMyChar:
-; 	jmp moveMyChar
-	
-; charCollision:
-; 	lda #0			; counter for mario char to add to overlap
-; 	sta countChar
-; 	sta countPixel
-; collisionLoop:
-; 	ldx countChar
-; 	lda marMem,X		; mar[countChar] memory location
-; 	clc
-; 	adc countPixel
-; 	tax
-; 	ldy GRAPHSTART2,X	; countPixel row of pixels in countChar area of Mario
-; 	ldx countChar
-; 	lda overChars,X		; overChars[countChar] memory location
-; 	clc
-; 	adc countPixel		; memory location of overlapping countPixel row of pixels in countChar area of overlapChars
-; 	tax	
-; 	tya
-; 	and GRAPHSTART2,X	; if any bits of Accumulator set then collision has occured
-
-; 	bne collisionOccured
-	
-; 	inc countPixel
-; 	lda countPixel
-; 	cmp #8				; if more rows of pixels are needed
-; 	bne collisionLoop		; go and loop again
-; 	lda #0				; reset pixel rows count
-; 	sta countPixel
-; 	inc countChar
-; 	lda countChar
-; 	cmp #4				; if more characters need to be overlapped
-; 	bne collisionLoop		; go and loop again	
-; 	jmp getKeyInput
-	
-; collisionOccured:
-; 	lda #'@
-; 	jsr CHROUT
-; 	jmp end	
-	
-	
-; getKeyInput:
-; 	lda #0
-; 	jsr	CHRIN
-; 	cmp #'W		; if w pressed 
-; 	beq jmpMoveMyChar
-; 	cmp #'C		; if c pressed 
-; 	beq charCollision
-; 	jmp getKeyInput
-
-
-	; jsr $e55f		; clear screen
 start:		
 	jsr CLEARSCREEN
     lda #0			; screen and border colors
@@ -198,50 +76,120 @@ printSpacesMenu:
 	cpx #0			; check if more spaces to print
 	bne printSpacesMenu
 	ldy #0
-
-
+	
 printMenu1:
 	lda menuMessage1,Y
 	cmp #0			; if there is more message to print
-	beq donePrintMenu
+	beq donePrintMenuInit
 	JSR CHROUT
 	iny
 	jmp printMenu1
-	ldy #0
-printMenu2:
-	lda menuMessage2,Y
-	cmp #0			; if there is more message to print
-	beq donePrintMenu
-	JSR CHROUT
-	iny
-	jmp printMenu2
-	
+
+
+donePrintMenuInit:
+	ldx #12
+	stx $1000
 donePrintMenu:
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #'@
+	jsr CHROUT
+
 	lda #0
 	jsr CHRIN
-	cmp #0
-	beq donePrintMenu
-	
+	cmp #'S
+	beq menuDown
+	cmp #'W
+	beq menuUp
+	cmp #' 
+	beq menuSelect
+	jmp donePrintMenu
+
+menuUp:
+	lda $1000
+	cmp #12
+	beq MenuUpEnd
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	ldx $1000
+	dex 
+	dex
+	stx $1000
+	jmp donePrintMenu
+MenuUpEnd:
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda #16
+	sta $1000
+	jmp donePrintMenu
+
+menuDown:
+	lda $1000
+	cmp #16
+	beq MenuDownEnd
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda $1000
+	adc #2
+	sta $1000
+	jmp donePrintMenu
+MenuDownEnd:
+	ldx $1000
+	ldy #3
+	clc
+	jsr $fff0
+	lda #' 
+	jsr CHROUT
+	lda #12
+	sta $1000
+	jmp donePrintMenu
+menuSelect:
+	lda $1000
+	cmp #12
+	beq toPlayMode
+	cmp #14
+	beq createMode
+; 	cmp #16
+; 	beq toPlayCreated
+toPlayMode:
+	jmp playModeInit
+; toCreateMode:
+; 	jmp createMode
+; toPlayCreated:
+; 	jmp PlayCreated
+
+;***********************************************************
+;Enter the play mode
+playModeInit:
 	ldx #0
 	ldy #0
 	jsr CLEARSCREEN
 
-cll:				;Printing the white screen among the black background
-    lda #32+128
-    sta 7680,x      ; screen memory
-    sta 7680+256,x
-    dex
-    bne cll
-
-	lda #'*  			; load mario
-	jsr CHROUT		; print char in accumulator
-	lda #'/=' 
+createMode:				;Printing the white screen among the black background
+	jsr CLEARSCREEN
+	lda #'#
 	jsr CHROUT
-	
-	lda #1
-	sta $0110
 
 main:
+	jmp music
+	jmp userInput
+
+
+userInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
@@ -258,54 +206,65 @@ main:
 	beq jumpToNKey
 	jmp main		; If there is no input
 
+
+waitLoop:
+	iny 
+	cpy #20
+	bne waitLoop
+	rts
+
+music:
+	lda #0
+	sta $900e
+	lda #159
+	sta $900c
+	ldy #0	
+	jsr waitLoop
+	lda #179
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	lda #199
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	rts
+
 mainEnd:
 	jsr CLEARSCREEN
 	jmp end
 
 ;The codes are too long that we can't directly branching out
 jumpToWKey:
-	lda #1
-	sta $0101
-	jmp jmpEnd
+	jmp wKey
 jumpToAKey:
-	lda #2
-	sta $0101
-	jmp jmpEnd
+	jmp aKey
 jumpToSKey:
-	lda #3
-	sta $0101
-	jmp jmpEnd
+	jmp sKey
 jumpToDKey:
-	lda #4
-	sta $0101
-	jmp jmpEnd
+	jmp dKey
 jumpToQKey:
-	lda #5
-	sta $0101
-	jmp jmpEnd
+	jmp qKey
 jumpToNKey:
-	lda #6
-	sta $0101
-	jmp jmpEnd
-jmpEnd:
+	jmp nKey
 
 nKey:				;Press N to create a new block
-	ldy $0101
-	cpy #6
-	bne nkeyInput
-	ldy #0
-	lda $0113
-	adc #1
-	sta $0113
-	ldx $0113
+	;Saving the x position to stack, increment stack counter
+	ldx $1011
+	lda $D1 
+	sta $1013,x
+	ldx $1011
+	inx 
+	stx $1011
+
+	ldx $1011
+	lda $D3 
+	sta $1013,x 
+	ldx $1011 
+	inx 
+	stx $1011
+
 nKeyIncrease:
-	inx
-	iny
-	iny
-	iny
-	cpx $0113
-	bne nKeyIncrease
-	iny
 	lda $0111
 	sta $0113,y
 	iny 
@@ -322,9 +281,6 @@ nKeyIncrease:
 	sta $0112
 	; get input for the item index
 nkeyInput:
-	ldy $0101
-	cpy #6
-	bne qKey
 
 	lda #0
 	jsr	CHRIN
@@ -348,36 +304,36 @@ nkeyInput:
 Key1:					;Some extra function that needed to work on later
 	lda #1
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key2:
 	lda #2
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key3:
 	lda #3
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key4:
 	lda #4
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key5:
 	lda #5
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key6:
 	lda #6
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key7:
 	lda #7
 	sta $0110
-	jmp nKeyEnd
+	jmp drawing
 Key8:
 	lda #8
 	sta $0110
-nKeyEnd:
 	jmp drawing
+
 
 qKey:						;When user hit Q, quit the game and print end game message
 	ldy $0101
@@ -584,9 +540,7 @@ end:
 endGameMessage:
 	.byte "END GAME", 0
 menuMessage1:
-	.byte "SUPER MARIO MAKER   PRESS ANY KEY TO PLAY", 0	
-menuMessage2:
-	.byte " PRESS ANY KEY TO PLAY  ", 0	
+	.byte "SUPER MARIO MAKER ?                                                                         PLAY MODE                                  CREATE MODE                                 PLAY CREATED", 0
 
 chars:
 	.byte "& <> & '* & +- &      ","& () & /= &    &      &    & !",'","             &    &                ", 0
