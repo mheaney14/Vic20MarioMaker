@@ -221,7 +221,11 @@ printMap1End:
 	ldx #3
 	stx $1003
 	jsr displayLives
-
+	
+;***************Initialize score to zero
+	lda #'0
+	sta $1004
+	jsr drawScore
 ;***************Timer initialization	
 	lda #'1
 	sta $1001
@@ -301,6 +305,30 @@ drawPlayerMario:
 	lda #'@
 	jsr CHROUT
 	rts
+	
+drawScore:	;Draw current score (single digit) at top-center of screen
+	ldx #0
+	ldy #11
+	clc
+	jsr $fff0
+	lda #'0
+	jsr CHROUT
+	
+	ldx #0
+	ldy #12
+	clc
+	jsr $fff0
+	lda $1004
+	jsr CHROUT
+	rts
+	
+gainPoint:		;Call on collision with coin, coin-block, or any other object that increases score
+	ldx $1004
+	inx
+	stx $1004
+	jsr drawScore
+	rts
+	
 	
 displayLives:
 	ldx $1003
