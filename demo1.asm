@@ -240,6 +240,8 @@ playTimerLoop:
 	jsr RDTIM
 	stx $1bfe
 finishPlayTimerTest:
+;************user input would go here
+
 	jmp playTimerLoop
 	
 	jmp end
