@@ -222,6 +222,26 @@ printMap1End:
 	stx $1003
 	jsr displayLives
 
+	lda #'1
+	sta $1001
+	lda #'9
+	sta $1002	;sets timer to arbitrary initial value
+	jsr RDTIM
+	stx $1bfe
+	
+	jsr timerLoadandDisplay
+;**********Loop that continuously checks if internal clock has changed and updates timer if it does (could also be good place to put the check for user input)
+playTimerLoop:
+	jsr RDTIM
+	cpx $1bfe
+	beq finishPlayTimerTest	
+	jsr decrementTimer
+	jsr timerLoadandDisplay
+	jsr RDTIM
+	stx $1bfe
+finishPlayTimerTest:
+	jmp playTimerLoop
+	
 	jmp end
 
 
@@ -258,6 +278,14 @@ drLifeDone:
 
 createMode:				;Printing the white screen among the black background
 	jsr CLEARSCREEN
+	lda #'1
+	sta $1001
+	lda #'9
+	sta $1002	;sets timer to arbitrary initial value
+	jsr RDTIM
+	stx $1bfe
+	
+	jsr timerLoadandDisplay
 	lda #0
 	sta $1011
 
@@ -298,6 +326,16 @@ drawingBlockLoop:
 	jmp drawingBlock
 
 userInput:
+	jsr RDTIM					; Continuously checks if the internal clock has changed and updates timer if it has
+	cpx $1bfe					;
+	beq finishTimerTest			;
+	jsr decrementTimer			;
+	jsr timerLoadandDisplay		;
+	jsr RDTIM					;
+	stx $1bfe					;
+
+finishTimerTest:
+	
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
@@ -316,6 +354,7 @@ userInput:
 
 
 waitLoop:
+
 	iny 
 	cpy #20
 	bne waitLoop
@@ -729,6 +768,49 @@ doneDrawMap:
 
 end:
 	jmp end
+	
+	
+	
+timerLoadandDisplay:		;Loading timer value from $1001 and $1002 and displaying it in top right
+	ldx #0          ; Row
+    ldy #20          ; Column
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1001
+	jsr CHROUT
+	ldx #0          ; Row
+    ldy #21          ; Column
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1002
+	jsr CHROUT
+	rts
+
+decrementTimer:	;decrements the current value in $1002. If the value is zero it wraps around to 9 and decrements value in $1001. If $1001 is 0 when it attempts to decrement, the timer does not decrement
+	lda $1002
+zeroTest:
+	cmp #'0
+	bne subTimer
+endTest:
+	lda $1001
+	cmp #'0
+	bne continueDecrement
+	jmp finishDecrement
+continueDecrement:
+	tax
+	dex
+	txa
+	sta $1001
+	lda #'9
+	sta	$1002
+	jmp finishDecrement
+subTimer:
+	tax
+	dex
+	txa
+	sta $1002
+finishDecrement:
+	rts
+	
 		
 endGameMessage:
 	.byte "WHAT WOULD YOU LIKE TO        DO?                                                             PLAY THE MAP                                END GAME", 0
