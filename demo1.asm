@@ -232,7 +232,7 @@ printMap1End:
 	
 	jsr timerLoadandDisplay
 	
-;**************Initialize Mario
+;**************Initialize Mario (should be replaced to read in the location specific to loaded in map)
 	ldx #16
 	ldy #1
 	stx $1008
