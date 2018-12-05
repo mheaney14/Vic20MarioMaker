@@ -364,7 +364,6 @@ loadChar2:
 
 ;******************* End of Graphics *******************
 
-	; jsr $e55f		; clear screen
 start:		
 	jsr CLEARSCREEN
     lda #0			; screen and border colors
@@ -448,6 +447,9 @@ toPlayMode:
 ; 	jmp PlayCreated
 
 ;***********************************************************
+;***********************************************************
+;***********************************************************
+;***********************************************************
 ;Enter the play mode
 playModeInit:
 	ldx #0
@@ -459,38 +461,39 @@ cll:				;Printing the white screen among the black background
     sta 7680+256,x
     dex
     bne cll
+	
+;Initialize stack counter ($1011) and stack end pointer ($1012) to 0
+	lda #0
+	sta $1011
+	lda #0
+	sta $1012
 
-;Print the Map 1
-;It is like the print message function
-;But since the map is bigger than the message, so the y will greater than 255, which is overflow
-;In order to deal with it, I divide the map into several part, so that the y will not out of range
-;However, there is a magical spot in the screen, which is the bottom right most corner, if we touch it with the normal way
-;it would return a new page, which will push the map up and leave bottom blank
-;in order to solve this, we will use "printMap1End" function to deal with it, and make it ground forever to make our lives easier
 	ldy #0
 printMap1:
 	lda GameMap1,y
 	cmp #0			
 	beq printMap1RestInit
-	JSR CHROUT
+	jsr CHROUT
 	iny
 	jmp printMap1
 printMap1RestInit:
 	ldy #0
 printMap1Rest:
-	lda GameMap1+243,y
+	lda GameMap1+177,y
 	cmp #0			
 	beq printMap1FinalInit
-	JSR CHROUT
+	jsr storeItem
+	lda GameMap1+177,y
+	jsr CHROUT
 	iny
 	jmp printMap1Rest
 printMap1FinalInit:
 	ldy #0
 printMap1Final:
-	lda GameMap1+486,y
+	lda GameMap1+398,y
 	cmp #0			
 	beq printMap1End
-	JSR CHROUT
+	jsr CHROUT
 	iny
 	jmp printMap1Final
 printMap1End:
@@ -501,70 +504,312 @@ printMap1End:
 	lda #'&
 	jsr CHROUT
 
-test:
-	jmp test
+	jmp PlaymodeStart
 
+storeItem:
+	ldx $1012
+	sta $1013,x
+	ldx $1012
+	inx
+	stx $1012
+	rts
 
-    ; Print out the mario 
-    lda #255
-    sta $D1
-    lda #97
-    sta $D3
-    lda #'@
-    jsr CHROUT
-    lda #255
-    sta $0005       ;Mario D1 position
-    lda #97
-    sta $0006       ;Mario D3 position
+PlaymodeStart:
+	lda #'@				; Draw Mario at beginning
+	sta $1008
+	ldy #0
+	sty $1006
+	ldx #16
+	stx $1007
+	jsr drawing
 
+main:
+	jsr	music
+	jmp userInput
 
-
-
-;***************************************
-;end of the game
-printEndGameMessage:				;Print end game message
-	LDA endGameMessage,Y
-	CMP #0
-	BEQ endPrintEndGameMessage
-	JSR	CHROUT
-	INY 
-	jmp printEndGameMessage
-endPrintEndGameMessage:
+userInput:
 	lda #0
-	jsr CHRIN
-	BEQ endPrintEndGameMessage
+	jsr	CHRIN		;accept user input for test number 
+	cmp #'W			; Branch to the coressponding key
+	beq jumpToWKey
+	cmp #'A
+	beq jumpToAKey
+	cmp #'S
+	beq jumpToSKey
+	cmp #'D
+	beq jumpToDKey
+	jmp userInput		; If there is no input
+
+waitLoop:
+	iny 
+	cpy #20
+	bne waitLoop
+	rts
+
+music:
+	lda #0
+	sta $900e
+	lda #159
+	sta $900c
+	ldy #0	
+	jsr waitLoop
+	lda #179
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	lda #199
+	sta $900c
+	ldy #0
+	jsr waitLoop
+	rts
+
+mainEnd:
+	jsr CLEARSCREEN
 	jmp end
+
+; ;The codes are too long that we can't directly branching out
+jumpToWKey:
+	jmp wKey
+jumpToAKey:
+	jmp aKey
+jumpToSKey:
+	jmp sKey
+jumpToDKey:
+	jmp dKey
+
+checkCollide:
+	lda $1900
+	sta $1903
+	ldx $1901
+colliCal:
+	lda $1903
+	adc #21
+	sta $1903
+	dex
+	cpx #0
+	bne colliCal
+
+	ldx #0
+	ldy #0
+	clc 
+	jsr $FFF0
+	ldy $1903
+	lda $1013,y
+	jsr CHROUT
+
+	ldy $1903
+	lda $1013,y
+	cmp #' 
+	bne collided
+	lda #0
+	sta $100a
+	rts
+collided:
+	lda #1
+	sta $100a
+	rts
+
+dKey:						;press D to move right
+	; Check if the current position is at the end of the line, if yes go back to userInput
+	lda $1006
+	cmp #21
+	beq dKeyEnd
+
+	; Check collision
+	lda $1006
+	adc #1
+	sta $1900
+	lda $1007
+	sbc #7
+	sta $1901
+	jsr checkCollide
+
+	; Check collision result
+	lda $100a
+	cmp #0
+	bne dkeyCollide
+
+	; Erase the current position Mario
+	jsr clearCharacter
+	; Otherwise increment x position by 1 
+	ldx $1006
+	inx
+	stx $1006
+	jsr drawing
+	jmp userInput
+dkeyCollide:
+	jmp userInput
+dKeyEnd:
+	jsr CLEARSCREEN
+	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
+	ldx $1011
+	ldy $1000
+	iny
+	sty $1000
+	ldy $1000
+	; sty $1013,x
+
+	; Increase the $1011
+	inx 
+	stx $1011 
+	ldx $1000
+	inx
+	stx $1000
+
+	; reset the current x y position
+	lda #0
+	sta $1006
+	lda #16
+	sta $1007
+
+	jsr drawing
+	jmp userInput
+
+
+
+wKey:
+	; If y = 0 then you can't move up and thus the move can't be made
+	lda $1007 
+	cmp #0
+	beq wKeyEnd
+
+	; Check collision
+	lda $1006
+	sta $1900
+	lda $1007
+	sbc #9
+	sta $1901
+	jsr checkCollide
+	
+	; Check collision result
+	lda $100a
+	cmp #0
+	bne wKeyEnd
+
+	; Erase the current position Mario
+	jsr clearCharacter
+	; y = y - 1, store back into 1007
+	ldx $1007
+	dex
+	stx $1007
+	; go to drawing
+	jsr drawing
+wKeyEnd:
+	jmp userInput
+
+aKey:
+	; Check if x = 0 then you can't move left anymore, go back to userInput
+	lda $1006
+	cmp #0
+	beq aKeyEnd
+
+	; Check collision
+	lda $1006
+	sbc #1
+	sta $1900
+	lda $1007
+	sbc #8
+	sta $1901
+	jsr checkCollide
+
+	; Check collision result
+	lda $100a
+	cmp #0
+	bne aKeyEnd
+
+	; Otherwise clearCharacter, decrement x by 1 and go to drawing
+	jsr clearCharacter
+	ldx $1006
+	dex
+	stx $1006
+	jsr drawing
+aKeyEnd:
+	jmp userInput
+
+; Move down
+sKey:
+	; You can't go down if you're at the bottom of the screen
+	lda $1007
+	cmp #22
+	beq sKeyEnd
+
+	; Check collision
+	lda $1006
+	sta $1900
+	lda $1007
+	sbc #6
+	sta $1901
+	jsr checkCollide
+
+	; Check collision result
+	lda $100a
+	cmp #0
+	bne sKeyEnd
+
+	; if you're not at the bottom, clear the screen, increment y position and draw
+	jsr clearCharacter
+	ldx $1007
+	inx
+	stx $1007
+	jsr drawing
+sKeyEnd:
+	jmp userInput
+
+drawing:
+	ldy $1006
+	ldx $1007
+	clc 
+	jsr $FFF0
+
+	; Check $1008 for the current symbol needed to be drawn
+	lda $1008
+	jsr CHROUT
+	rts 
+
+clearCharacter:
+	ldy $1006
+	ldx $1007
+	clc
+	jsr $FFF0
+	lda #' 
+	jsr CHROUT
+	rts
 
 end:
 	jmp end
+
 
 menuMessage1:
 	.byte "SUPER MARIO MAKER ?                                                                         PLAY MODE                                  CREATE MODE                                 PLAY CREATED", 0
 
 GameMap1:
-	.byte "1                     "
-	.byte "2                     "
-	.byte "3                     "
-	.byte "4                     "
-	.byte "5                     "
-	.byte "6                     "
-	.byte "7                     "
-	.byte "8                     "
-	.byte "9                     "
-	.byte "10                    "
-	.byte "11                    ",0
-	.byte "12                    "
-	.byte "13                    "
-	.byte "14            ?       "
-	.byte "15                    "
-	.byte "16                    "
-	.byte "17  #        ]     [  "
-	.byte "18&&&&&  &&&&&&&&&&&&&"
-	.byte "19&&&&&  &&&&&&&&&&&&&"
-	.byte "20&&&&&  &&&&&&&&&&&&&"
-	.byte "21&&&&&  &&&&&&&&&&&&&"
-	.byte "22&&&&&  &&&&&&&&&&&&&",0
-	.byte "23&&&&&  &&&&&&&&&&&&",0
+	.byte "                      "	;1
+	.byte "                      "	;2
+	.byte "                      "	;3
+	.byte "                      "	;4
+	.byte "                      "	;5
+	.byte "                      "	;6
+	.byte "                      "	;7
+	.byte "                      ",0	;8
+	.byte "                      "	;9		;1
+	.byte "                      "	;10		;2
+	.byte "                      "  ;11		;3
+	.byte "                      " ;12		;4
+	.byte "                      " ;13		;5
+	.byte "              ?       " ;14		;6
+	.byte "                      " ;15		;7
+	.byte "#                     " ;16		;8
+	.byte "    #        ]     [  " ;17		;9
+	.byte "&&&&&&  &&&&&&&&&&&&&&",0 ;18		;10
+	.byte "&&&&&&  &&&&&&&&&&&&&&" ;19
+	.byte "&&&&&&  &&&&&&&&&&&&&&" ;20
+	.byte "&&&&&&  &&&&&&&&&&&&&&" ;21
+	.byte "&&&&&&  &&&&&&&&&&&&&&" ;22
+	.byte "&&&&&&  &&&&&&&&&&&&&",0 ;23
+
 
 endGameMessage:
 	.byte "END GAME", 0
+
+testMap:
+	.byte "1 2 3 4 5 6 7 8 9",0
