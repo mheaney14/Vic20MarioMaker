@@ -239,19 +239,19 @@ drThreeLife:
 	ldy #2
 	clc 
 	jsr $FFF0
-	lda #'@
+	lda #'%			; new heart character
 	jsr CHROUT
 drTwoLife:
 	ldy #1
 	clc 
 	jsr $FFF0
-	lda #'@
+	lda #'%
 	jsr CHROUT
 drOneLife:
 	ldy #0
 	clc
 	jsr $FFF0
-	lda #'@
+	lda #'%
 	jsr CHROUT
 drLifeDone:
 	rts
@@ -553,7 +553,8 @@ dKeyEnd:
 	iny
 	sty $1000
 	ldy $1000
-	sty $1013,x
+	tya
+	sta $1013,x
 
 	; Increase the $1011
 	inx 
@@ -755,7 +756,7 @@ newChars1:									;	start replacing at GRAPHSTART2
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	GOOMBA_2 '"
 	.byte	$FF,$81,$81,$81,$81,$81,$81,$FF	;	BOX '#
 	.byte	$FF,$81,$99,$B5,$AD,$99,$81,$FF	;	COIN_BLOCK '$
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	UNUSED '%
+	.byte	$00,$36,$7F,$7F,$3E,$1C,$08,$00	;	HEART '%
 	.byte	$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF	;	SOLID_BLOCK '&					
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00	;	MARIO_COLLIDING_TL ''			
 	.byte	$3C,$3C,$18,$FF,$3C,$3C,$24,$C3	;	MARIO_BL '(								********** FIX
@@ -793,6 +794,8 @@ SOLID_BLOCK_C:
 	.byte "&"
 QUESTION_BLOCK_C:
 	.byte "?"
+HEART_C:
+	.byte "%"
 
 GameMap1:
 	.byte "                      "
@@ -819,10 +822,6 @@ GameMap1:
 	.byte "&&&&&&  &&&&&&&&&&&&&&",0
 	.byte "&&&&&&  &&&&&&&&&&&&&",0
 
-	
-	
-	
-	
 	
 	
 	
