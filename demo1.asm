@@ -62,6 +62,7 @@ loadNewChars2:
 
 start:		
 	jsr CLEARSCREEN
+
     lda #0			; screen and border colors
     sta $900F
 	lda #1			;Set the background of the character to white
@@ -85,18 +86,20 @@ printMenu1:
 	iny
 	jmp printMenu1
 
-
+playModeInitJump:
+	jmp playModeInit
 donePrintMenuInit:
-	ldx #12
-	stx $1000
+	lda #12
+	sta $1007
 donePrintMenu:
-	ldx $1000
+	ldx $1007
 	ldy #3
 	clc
 	jsr $fff0
 	lda #'@
 	jsr CHROUT
 
+menuInput:
 	lda #0
 	jsr CHRIN
 	cmp #'S
@@ -108,57 +111,59 @@ donePrintMenu:
 	jmp donePrintMenu
 
 menuUp:
-	lda $1000
+	lda $1007
 	cmp #12
 	beq MenuUpEnd
-	ldx $1000
+
+	ldx $1007
 	ldy #3
 	clc
 	jsr $fff0
 	lda #' 
 	jsr CHROUT
-	ldx $1000
+
+	ldx $1007
 	dex 
 	dex
-	stx $1000
+	stx $1007
 	jmp donePrintMenu
 MenuUpEnd:
-	ldx $1000
+	ldx $1007
 	ldy #3
 	clc
 	jsr $fff0
 	lda #' 
 	jsr CHROUT
 	lda #16
-	sta $1000
+	sta $1007
 	jmp donePrintMenu
 
 menuDown:
-	lda $1000
+	lda $1007
 	cmp #16
 	beq MenuDownEnd
-	ldx $1000
+	ldx $1007
 	ldy #3
 	clc
 	jsr $fff0
 	lda #' 
 	jsr CHROUT
-	lda $1000
+	lda $1007
 	adc #2
-	sta $1000
+	sta $1007
 	jmp donePrintMenu
 MenuDownEnd:
-	ldx $1000
+	ldx $1007
 	ldy #3
 	clc
 	jsr $fff0
 	lda #' 
 	jsr CHROUT
 	lda #12
-	sta $1000
+	sta $1007
 	jmp donePrintMenu
 menuSelect:
-	lda $1000
+	lda $1007
 	cmp #12
 	beq toPlayMode
 	cmp #14
@@ -258,45 +263,42 @@ drLifeDone:
 
 createMode:				;Printing the white screen among the black background
 	jsr CLEARSCREEN
+	
+	; Set up current stack counter, x, y, type of character
 	lda #0
 	sta $1011
-
-	ldy #-1
-	jsr drawingBlock
-
-	; 1006 = x position, 1007 is y position, 1008 is the current symbol
-	ldx $1011
-	lda #51
-	sta $1011,x
-	inx
-	stx $1011
-
+	lda #0
+	sta $1006
+	lda #0
+	sta $1007
 	lda #'@
 	sta $1008
-	ldy #0
-	sty $1006
-	ldx #0
-	stx $1007
 
+	; Set up and store the current map level into stack as well as $1000
+	ldx $1011
+	lda #201
+	sta $1013,x
+	inx 
+	stx $1011
+
+	lda #201
+	sta $1000
+
+	; increment stack pointer
+
+	; ldy #-1
+	; jsr drawingBlock
+	lda $1011
+	sta $1012
+	lda #0
+	sta $1011
+	jsr drawMap
 	jsr drawing
 
 
 main:
 	jsr	music
 	jmp userInput
-drawingBlock:
-	cpy #43
-	bne drawingBlockLoop
-	rts
-
-drawingBlockLoop:
-	iny
-	ldx #21
-	CLC
-	JSR $FFF0
-	lda #'#
-	jsr CHROUT
-	jmp drawingBlock
 
 userInput:
 	lda #0
@@ -547,27 +549,46 @@ dKey:						;press D to move right
 	jmp userInput
 dKeyEnd:
 	jsr CLEARSCREEN
-	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
-	ldx $1011
-	ldy $1000
-	iny
-	sty $1000
-	ldy $1000
-	sty $1013,x
-
-	; Increase the $1011
-	inx 
-	stx $1011 
+	; Mark the beginning of new map level onto the stack, increment $1000 by 1
 	ldx $1000
 	inx
 	stx $1000
 
-	; reset the current x y position
+	; Check if the previous value in the stack is >= 200 => it's a level value 
+	; Meaning you're moving around the maps without storing anything
+	; Therefore you want to override the previous value 
+	ldx $1011
+	dex
+	lda $1013,x
+	cmp #200
+	; Skip the increment to store the value at $1011 - 1
+	bcs skipIncrement
+	; Otherwise increment the $1011 again
+	ldx $1011
+	inx 
+	stx $1011
+
+skipIncrement:
+	; Either x = $1011 or x = $1011 - 1, then increment it again
+	ldx $1011
+	lda $1000
+	sta $1013,x
+	inx
+	stx $1011 
+
+	; store $1011 to $1012, reset $1011, go to drawMap
+	lda $1011
+	sta $1012
+	lda #0
+	sta $1011
+	jsr drawMap
+
 	lda #0
 	sta $1006
 	lda #0
 	sta $1007
-
+	lda #'@
+	sta $1008
 	jsr drawing
 	jmp userInput
 
@@ -591,7 +612,7 @@ wKeyEnd:
 aKey:
 	; Check if x = 0 then you can't move left anymore, go back to userInput
 	lda $1006
-	cmp #0
+	cmp #21
 	beq aKeyEnd
 	; Otherwise clearCharacter, decrement x by 1 and go to drawing
 	jsr clearCharacter
@@ -600,6 +621,40 @@ aKey:
 	stx $1006
 	jsr drawing
 aKeyEnd:
+	jsr CLEARSCREEN
+	; Decrement the current map level
+	ldx $1000
+	dex 
+	stx $1000
+
+	; store $1000 onto the stack, going back to the old map
+	ldx $1011
+	dex
+	lda $1013,x
+	cmp #200
+	bcs aSkipIncrement
+	ldx $1011
+	inx
+	stx $1011
+
+aSkipIncrement:
+	ldx $1011
+	lda $1000
+	sta $1013,x
+	inx 
+	stx $1011
+
+	lda $1011
+	sta $1012
+	lda #0
+	sta $1011
+	jsr drawMap
+
+	lda #0
+	sta $1006
+	lda #0
+	sta $1007
+	jsr drawing
 	jmp userInput
 
 ; Move down
@@ -652,81 +707,109 @@ endPrintEndGameMessage:
 
 playCreatedMap:
 	jsr CLEARSCREEN
+	lda #201
+	sta $1000
+
 	lda $1011
 	sta $1012
 	lda #0
 	sta $1011
 
-drawCreatedMap:
-	; Check if it reaches the end of stack
-	ldx $1011
-	lda $1013,x
-	cmp $1012
-	beq doneDrawMap
+drawMap:
+	; Store the current stack counter to stack end pointer, reload stack counter to 0
 
-	; check if we're currently in correct map level
+	ldy #-1
+	jsr drawingBlock
+
+	; If counter >= stack end => doneDrawMap
+	lda $1011
+	cmp $1012
+	bcs doneDrawMap
+	; if currentStack.value < currentMap => do nothing, as it is not the current map we want
+	; If currentStack.value == currentMap => go into innerLoop
+	ldx $1011
 	lda $1013,x
 	cmp $1000
-	bne noDrawMap
-
-	ldx $1011
-	lda $1013,x
-	inx
-	stx $1011
-	sta $1006
+	BNE endDrawMap
 	
+incrementDrawLoop:	
+	ldx $1011
+	inx 
+	stx $1011
+
+innerDrawLoop:
+	; If counter >= stack end => doneDrawMap (check again in case the counter end within the inner loop)
+	lda $1011
+	cmp $1012
+	beq doneDrawMap
+	bcs doneDrawMap2
+
+	;Otherwise, we start drawing characters within our current map level
+	;Load the current x position from the stack
 	ldx $1011
 	lda $1013,x
+	sta $1006
 	inx
 	stx $1011
+	
+	; Load the current y postion from the stack
+	ldx $1011
+	lda $1013,x
 	sta $1007
+	inx
+	stx $1011
 
+	; Load the current symbol from the stack
 	ldx $1011
 	lda $1013,x
 	sta $1008
 	inx
 	stx $1011
-	
-	ldx $1007
-	ldy $1006
-	lda $1008
-	cmp #1
-	beq draw1
-	cmp #2
-	beq draw2
-	clc
-	jsr $FFF0
-	lda #'%
-	jsr CHROUT
-	jmp last
+	jsr drawing	
 
-draw1:
-	clc
-	jsr $FFF0
-	lda #'@
-	jsr CHROUT
-	jmp	last
-draw2
-	clc
-	jsr $FFF0
-	lda #'#
-	jsr CHROUT
-	jmp last
-last:
-	jmp drawCreatedMap
-
-noDrawMap:
+	ldx $1011
+	lda $1013,x
+	cmp $1000
+	bcs drawMap
+	beq drawMap
+	jmp innerDrawLoop
+endDrawMap:
+	; Increment the stack counter
+	ldx $1011
 	inx
 	stx $1011
-	jmp drawCreatedMap
+	jmp drawMap
 
-
+doneDrawMap2:
+	lda $1011
+	sta $1012
 doneDrawMap:
-	jmp end
+	lda #0
+	sta $1006
+	lda #0
+	sta $1007
+	lda #'@
+	sta $1008
+	jsr drawing
+	jmp userInput
 
+drawingBlock:
+	cpy #43
+	bne drawingBlockLoop
+	rts
+
+drawingBlockLoop:
+	iny
+	ldx #21
+	CLC
+	JSR $FFF0
+	lda #'#
+	jsr CHROUT
+	jmp drawingBlock
 
 
 end:
+	jsr CLEARSCREEN
 	jmp end
 		
 endGameMessage:
