@@ -222,6 +222,7 @@ printMap1End:
 	stx $1003
 	jsr displayLives
 
+;***************Timer initialization	
 	lda #'1
 	sta $1001
 	lda #'9
@@ -230,6 +231,14 @@ printMap1End:
 	stx $1bfe
 	
 	jsr timerLoadandDisplay
+	
+;**************Initialize Mario
+	ldx #16
+	ldy #1
+	stx $1008
+	sty $1007
+	jsr drawPlayerMario
+	
 ;**********Loop that continuously checks if internal clock has changed and updates timer if it does (could also be good place to put the check for user input)
 playTimerLoop:
 	jsr RDTIM
@@ -245,16 +254,54 @@ finishPlayTimerTest:
 	ldx #16			;This is just a test to confirm that user input is working while timer is running (just prints the inputted character)
 	ldy #2			;This should be replaced with the actual user input when it is implemented
 	clc				;
-	jsr $FFF0		;
-	jsr CHRIN		;
-	jsr CHROUT		;
-	
+	jsr keyChecks
 	
 	jmp playTimerLoop
 	
 	jmp end
 
+keyChecks:
+	jsr CHRIN
+	cmp #'A
+	beq aKeyPlay
+	cmp #'D
+	beq dKeyPlay
+	rts
+aKeyPlay:
+	lda $1007
+	cmp #0
+	beq endKeyChecks
+	jsr clearCharacter
+	ldx $1007
+	dex
+	stx $1007
+	jsr drawPlayerMario
+	rts
+	
+dKeyPlay:
+	
+	lda $1007
+	cmp #21
+	beq endKeyChecks
+	jsr clearCharacter
+	ldx $1007
+	inx
+	stx $1007
+	jsr drawPlayerMario
+	rts
 
+endKeyChecks:
+	rts
+
+drawPlayerMario:
+	ldx $1008
+	ldy $1007
+	clc
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+	rts
+	
 displayLives:
 	ldx $1003
 	cpx #1
@@ -580,6 +627,7 @@ endSelect:
 jumpToPlayCreatedMap:
 	jmp playCreatedMap
 
+
 dKey:						;press D to move right
 	; Check if the current position is at the end of the line, if yes go back to userInput
 	lda $1006
@@ -641,6 +689,7 @@ sKey:
 sKeyEnd:
 	jmp userInput
 
+
 drawing:
 	ldy $1006
 	ldx $1007
@@ -690,8 +739,8 @@ drawingOut:
 	rts 
 
 clearCharacter:
-	ldy $1006
-	ldx $1007
+	ldy $1007
+	ldx $1008
 	clc
 	jsr $FFF0
 	lda #' 
