@@ -265,19 +265,20 @@ createMode:				;Printing the white screen among the black background
 	jsr drawingBlock
 
 	; 1006 = x position, 1007 is y position, 1008 is the current symbol
-	lda #1
+	ldx $1011
+	lda #51
+	sta $1011,x
+	inx
+	stx $1011
+
+	lda #'@
 	sta $1008
 	ldy #0
 	sty $1006
 	ldx #0
 	stx $1007
-	ldy $1006
-	ldx $1007
-	clc
-	jsr $FFF0
-	lda #'@			; load mario
-	jsr CHROUT		; print char in accumulator
 
+	jsr drawing
 
 
 main:
@@ -408,35 +409,35 @@ nkeyInput:
 	beq Key8
 	jmp nkeyInput
 Key1:					;Some extra function that needed to work on later
-	lda #1
+	lda #'@
 	sta $1008
 	jmp jumpDrawing
 Key2:
-	lda #2
+	lda #'[
 	sta $1008
 	jmp jumpDrawing
 Key3:
-	lda #3
+	lda #']
 	sta $1008
 	jmp jumpDrawing
 Key4:
-	lda #4
+	lda #'<
 	sta $1008
 	jmp jumpDrawing
 Key5:
-	lda #5
+	lda #'#
 	sta $1008
 	jmp jumpDrawing
 Key6:
-	lda #6
+	lda #'&
 	sta $1008
 	jmp jumpDrawing
 Key7:
-	lda #7
+	lda #'$
 	sta $1008
 	jmp jumpDrawing
 Key8:
-	lda #8
+	lda #'?
 	sta $1008
 jumpDrawing:
 	jsr drawing
@@ -543,7 +544,31 @@ dKey:						;press D to move right
 	inx
 	stx $1006
 	jsr drawing
+	jmp userInput
 dKeyEnd:
+	jsr CLEARSCREEN
+	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
+	ldx $1011
+	ldy $1000
+	iny
+	sty $1000
+	ldy $1000
+	sty $1013,x
+
+	; Increase the $1011
+	inx 
+	stx $1011 
+	ldx $1000
+	inx
+	stx $1000
+
+	; reset the current x y position
+	lda #0
+	sta $1006
+	lda #0
+	sta $1007
+
+	jsr drawing
 	jmp userInput
 
 
@@ -600,43 +625,6 @@ drawing:
 
 	; Check $1008 for the current symbol needed to be drawn
 	lda $1008
-	cmp #1
-	bne drawNext1
-	lda #'@
-	jmp drawingOut
-drawNext1:
-	cmp #2
-	bne drawNext2
-	lda #'[
-	jmp drawingOut
-drawNext2:
-	cmp #3
-	bne drawNext3
-	lda #']
-	jmp drawingOut
-drawNext3:
-	cmp #4
-	bne drawNext4
-	lda #'<			; -- change before compile
-	jmp drawingOut
-drawNext4:
-	cmp #5
-	bne drawNext5
-	lda #'#
-	jmp drawingOut
-drawNext5:
-	cmp #6
-	bne drawNext6
-	lda #'&
-	jmp drawingOut
-drawNext6:
-	cmp #7
-	bne drawNext7
-	lda #'$
-	jmp drawingOut
-drawNext7:
-	lda #'?
-drawingOut:
 	jsr CHROUT
 	rts 
 
@@ -670,9 +658,16 @@ playCreatedMap:
 	sta $1011
 
 drawCreatedMap:
-	lda $1011
+	; Check if it reaches the end of stack
+	ldx $1011
+	lda $1013,x
 	cmp $1012
 	beq doneDrawMap
+
+	; check if we're currently in correct map level
+	lda $1013,x
+	cmp $1000
+	bne noDrawMap
 
 	ldx $1011
 	lda $1013,x
@@ -689,6 +684,8 @@ drawCreatedMap:
 	ldx $1011
 	lda $1013,x
 	sta $1008
+	inx
+	stx $1011
 	
 	ldx $1007
 	ldy $1006
@@ -716,9 +713,11 @@ draw2
 	jsr CHROUT
 	jmp last
 last:
-	ldy $1011
-	iny 
-	sty $1011
+	jmp drawCreatedMap
+
+noDrawMap:
+	inx
+	stx $1011
 	jmp drawCreatedMap
 
 
