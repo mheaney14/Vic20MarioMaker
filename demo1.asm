@@ -241,7 +241,15 @@ playTimerLoop:
 	stx $1bfe
 finishPlayTimerTest:
 ;************user input would go here
-
+	
+	ldx #16			;This is just a test to confirm that user input is working while timer is running (just prints the inputted character)
+	ldy #2			;This should be replaced with the actual user input when it is implemented
+	clc				;
+	jsr $FFF0		;
+	jsr CHRIN		;
+	jsr CHROUT		;
+	
+	
 	jmp playTimerLoop
 	
 	jmp end
