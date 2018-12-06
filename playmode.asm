@@ -400,52 +400,17 @@ RDTIM = $FFDE
 
 
 ;Initialize stack counter ($1011) and stack end pointer ($1012) to 0
-	lda #0
-	sta $1011
-	lda #0
-	sta $1012
+	
 
 ; Function to draw play mode map
-printMap1Init:
-	ldy #0
-printMap1:
-	lda GameMap1,y
-	cmp #0			
-	beq printMap1RestInit
-	jsr CHROUT
-	iny
-	jmp printMap1
-printMap1RestInit:
-	ldy #0
-printMap1Rest:
-	lda GameMap1+177,y
-	cmp #0			
-	beq printMap1FinalInit
-	jsr storeItem
-	lda GameMap1+177,y
-	jsr CHROUT
-	iny
-	jmp printMap1Rest
-printMap1FinalInit:
-	ldy #0
-printMap1Final:
-	lda GameMap1+398,y
-	cmp #0			
-	beq printMap1End
-	jsr CHROUT
-	iny
-	jmp printMap1Final
-printMap1End:
-	ldx #21
-	ldy #43
-	clc 
-	jsr $fff0
-	lda #'&
-	jsr CHROUT
+
 
 	jmp PlaymodeStart
 
 PlaymodeStart:
+	jsr printMap1Init
+	lda #1
+	sta $1800
 	lda #'@				; Draw Mario at beginning *******Should change to ( in master
 	sta $1008
 	ldy #0
@@ -478,10 +443,46 @@ playTimerLoop:
 	stx $1bfe
 
 finishPlayTimerTest:
+	lda $1003
+	cmp #0
+	beq jmpGameOVer
+
+	lda $1007
+	cmp #17
+	beq jmpGameOVer
+
 	jsr playInput
 	jmp playTimerLoop
 	rts
-	
+
+; fallingPitch:
+; 	jsr CLEARSCREEN
+; 	ldx #0
+; 	ldy #0
+; 	clc 
+; 	jsr $fff0
+; 	jsr printMap1Init
+; 	lda #'@				; Draw Mario at beginning *******Should change to ( in master
+; 	sta $1008
+; 	ldy #0
+; 	sty $1006
+; 	ldx #16
+; 	stx $1007
+; 	jsr drawing
+; 	lda $1003
+; 	sbc #1
+; 	sta $1003
+; 	jsr displayLives
+; 	jmp finishPlayTimerTest
+
+jmpGameOVer:
+	jsr CLEARSCREEN
+	ldx #0
+	ldy #0
+	clc 
+	jsr $fff0
+	jmp gameOverMessage
+
 playInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
@@ -524,7 +525,8 @@ colliCal:
 	sta $100a
 	rts
 collided:
-	lda #1
+	ldy $1903
+	lda $1013,y
 	sta $100a
 	rts
 
@@ -557,26 +559,58 @@ playdKey:						;press D to move right
 	jsr drawing
 	rts
 playdkeyCollide:
+	lda $100a
 	cmp #'#
 	beq pressDNP
 	cmp #'$
 	beq pressDNP
 	cmp #'&
 	beq pressDNP
-	ldx $1006
-	inx
-	stx $1006
-	jsr drawing
-	ldx $1006
+	ldx #0
+	ldy #0
+	clc 
+	jsr $FFF0
+	lda #' 
+	jsr CHROUT
+	lda #' 
+	jsr CHROUT
+	lda #' 
+	jsr CHROUT
+	ldx $1003
 	dex
-	stx $1006
-	jsr drawing
+	stx $1003
+	jsr displayLives
 pressDNP:
 	rts
 playdKeyEnd:
 	jsr CLEARSCREEN
+	lda $1800
+	cmp #2
+	beq playdkeyFinish
+	adc #1
+	sta $1800
+	lda $1800
+	cmp #2
+	beq drawL2
+	cmp #3
+	beq drawL3
+drawL2:
+	jsr printMap2Init
+	jmp renewChar
+drawL3:
+	jsr printMap3Init
 
-	
+renewChar:
+	jsr displayLives
+	jsr drawScore
+	lda #'@				; Draw Mario at beginning *******Should change to ( in master
+	sta $1008
+	ldy #0
+	sty $1006
+	ldx #16
+	stx $1007
+	jsr drawing
+playdkeyFinish:
 	jsr drawing
 	rts
 
@@ -598,7 +632,7 @@ playwKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne playwKeyEnd
+	bne playwKeyColli
 
 	; Erase the current position Mario
 	jsr clearCharacter
@@ -608,6 +642,15 @@ playwKey:
 	stx $1007
 	; go to drawing
 	jsr drawing
+	rts
+playwKeyColli:
+	lda $100a
+	cmp #'$
+	bne playwKeyEnd
+	lda $1004
+	adc #1
+	sta $1004
+	jsr drawScore
 playwKeyEnd:
 	rts
 
@@ -629,7 +672,7 @@ playaKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne playaKeyEnd
+	bne playaKeyColli
 
 	; Otherwise clearCharacter, decrement x by 1 and go to drawing
 	jsr clearCharacter
@@ -637,6 +680,31 @@ playaKey:
 	dex
 	stx $1006
 	jsr drawing
+	rts
+playaKeyColli:
+	lda $100a
+	cmp #'#
+	beq pressANP
+	cmp #'$
+	beq pressANP
+	cmp #'&
+	beq pressANP
+	ldx #0
+	ldy #0
+	clc 
+	jsr $FFF0
+	lda #' 
+	jsr CHROUT
+	lda #' 
+	jsr CHROUT
+	lda #' 
+	jsr CHROUT
+	ldx $1003
+	dex
+	stx $1003
+	jsr displayLives
+pressANP:
+	rts
 playaKeyEnd:
 	rts
 
@@ -701,7 +769,7 @@ endTest:
 	cmp #'0
 	bne continueDecrement
 	jsr CLEARSCREEN
-	jmp finishDecrement
+	jmp gameOverMessage
 continueDecrement:
 	tax
 	dex
@@ -743,12 +811,12 @@ gainPoint:		;Call on collision with coin, coin-block, or any other object that i
 	
 	
 displayLives:
-	ldx $1003
-	cpx #1
+	lda $1003
+	cmp #1
 	beq drOneLife
-	cpx #2
-	beq drOneLife
-	cpx #3
+	cmp #2
+	beq drTwoLife
+	cmp #3
 	beq drThreeLife
 	jmp drLifeDone
 drThreeLife:
@@ -759,12 +827,14 @@ drThreeLife:
 	lda #'@
 	jsr CHROUT
 drTwoLife:
+	ldx #0
 	ldy #1
 	clc 
 	jsr $FFF0
 	lda #'@
 	jsr CHROUT
 drOneLife:
+	ldx #0
 	ldy #0
 	clc
 	jsr $FFF0
@@ -772,6 +842,150 @@ drOneLife:
 	jsr CHROUT
 drLifeDone:
 	rts
+
+gameOverMessage:				;Print end game message
+	LDA GameOver,Y
+	CMP #0
+	BEQ playModeGameEnd
+	JSR	CHROUT
+	INY 
+	jmp gameOverMessage
+
+playModeGameEnd:
+	jmp playModeGameEnd
+
+printMap1Init:
+	lda #0
+	sta $1011
+	lda #0
+	sta $1012
+	ldy #0
+printMap1:
+	lda GameMap1,y
+	cmp #0			
+	beq printMap1RestInit
+	jsr CHROUT
+	iny
+	jmp printMap1
+printMap1RestInit:
+	ldy #0
+printMap1Rest:
+	lda GameMap1+177,y
+	cmp #0			
+	beq printMap1FinalInit
+	jsr storeItem
+	lda GameMap1+177,y
+	jsr CHROUT
+	iny
+	jmp printMap1Rest
+printMap1FinalInit:
+	ldy #0
+printMap1Final:
+	lda GameMap1+398,y
+	cmp #0			
+	beq printMap1End
+	jsr CHROUT
+	iny
+	jmp printMap1Final
+printMap1End:
+	ldx #21
+	ldy #43
+	clc 
+	jsr $fff0
+	lda #'&
+	jsr CHROUT
+	rts
+
+; Draw Game Map 2
+printMap2Init:
+	ldx #0
+	ldy #0
+	clc 
+	jsr $fff0
+	lda #0
+	sta $1011
+	lda #0
+	sta $1012
+	ldy #0
+printMap2:
+	lda GameMap2,y
+	cmp #0			
+	beq printMap1RestInit
+	jsr CHROUT
+	iny
+	jmp printMap2
+printMap2RestInit:
+	ldy #0
+printMap2Rest:
+	lda GameMap2+177,y
+	cmp #0			
+	beq printMap2FinalInit
+	jsr storeItem
+	lda GameMap2+177,y
+	jsr CHROUT
+	iny
+	jmp printMap2Rest
+printMap2FinalInit:
+	ldy #0
+printMap2Final:
+	lda GameMap2+398,y
+	cmp #0			
+	beq printMap2End
+	jsr CHROUT
+	iny
+	jmp printMap2Final
+printMap2End:
+	ldx #21
+	ldy #43
+	clc 
+	jsr $fff0
+	lda #'&
+	jsr CHROUT
+	rts
+
+; Draw Game map 3
+printMap3Init:
+	lda #0
+	sta $1011
+	lda #0
+	sta $1012
+	ldy #0
+printMap3:
+	lda GameMap3,y
+	cmp #0			
+	beq printMap3RestInit
+	jsr CHROUT
+	iny
+	jmp printMap3
+printMap3RestInit:
+	ldy #0
+printMap3Rest:
+	lda GameMap3+177,y
+	cmp #0			
+	beq printMap3FinalInit
+	jsr storeItem
+	lda GameMap3+177,y
+	jsr CHROUT
+	iny
+	jmp printMap3Rest
+printMap3FinalInit:
+	ldy #0
+printMap3Final:
+	lda GameMap3+398,y
+	cmp #0			
+	beq printMap3End
+	jsr CHROUT
+	iny
+	jmp printMap3Final
+printMap3End:
+	ldx #21
+	ldy #43
+	clc 
+	jsr $fff0
+	lda #'&
+	jsr CHROUT
+	rts
+
 
 
 
@@ -822,6 +1036,9 @@ end:
 menuMessage1:
 	.byte "SUPER MARIO MAKER ?                                                                         PLAY MODE                                  CREATE MODE                                 PLAY CREATED", 0
 
+GameOver:
+	.byte "                                                                                                                                           GAME OVER    ",0
+
 GameMap1:
 	.byte "                      "	;1
 	.byte "                      "	;2
@@ -836,9 +1053,9 @@ GameMap1:
 	.byte "                      "  ;11		;3
 	.byte "                      " ;12		;4
 	.byte "                      " ;13		;5
-	.byte "              ?       " ;14		;6
-	.byte "                      " ;15		;7
-	.byte "#                     " ;16		;8
+	.byte "                      " ;14		;6
+	.byte "               $      " ;15		;7
+	.byte "                      " ;16		;8
 	.byte "    #        ]     [  " ;17		;9
 	.byte "&&&&&&  &&&&&&&&&&&&&&",0 ;18		;10
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;19
@@ -846,3 +1063,79 @@ GameMap1:
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;21
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;22
 	.byte "&&&&&&  &&&&&&&&&&&&&",0 ;23
+
+GameMap2:
+	.byte "                      "	;1
+	.byte "                      "	;2
+	.byte "                      "	;3
+	.byte "                      "	;4
+	.byte "                      "	;5
+	.byte "                      "	;6
+	.byte "                      "	;7
+	.byte "                      ",0	;8
+	.byte "                      "	;9		;1
+	.byte "                      "	;10		;2
+	.byte "                      "  ;11		;3
+	.byte "                      " ;12		;4
+	.byte "                      " ;13		;5
+	.byte "                      " ;14		;6
+	.byte "                      " ;15		;7
+	.byte "                     ?" ;16		;8
+	.byte "    !      !       !  " ;17		;9
+	.byte "&&&&&&  &&&&&&&  &&&&&",0 ;18		;10
+	.byte "&&&&&&  &&&&&&&  &&&&&" ;19
+	.byte "&&&&&&  &&&&&&&  &&&&&" ;20
+	.byte "&&&&&&  &&&&&&&  &&&&&" ;21
+	.byte "&&&&&&  &&&&&&&  &&&&&" ;22
+	.byte "&&&&&&  &&&&&&&  &&&&",0 ;23
+
+
+GameMap3:
+	.byte "                      "	;1
+	.byte "                      "	;2
+	.byte "                      "	;3
+	.byte "                      "	;4
+	.byte "                      "	;5
+	.byte "                      "	;6
+	.byte "                      "	;7
+	.byte "                      ",0	;8
+	.byte "                      "	;9		;1
+	.byte "                      "	;10		;2
+	.byte "                      "  ;11		;3
+	.byte "                      " ;12		;4
+	.byte "                      " ;13		;5
+	.byte "                      " ;14		;6
+	.byte "                      " ;15		;7
+	.byte "        $             " ;16		;8
+	.byte "    !        !     !  " ;17		;9
+	.byte "&&&&&&&&&&&&&&&  &&&&&",0 ;18		;10
+	.byte "&&&&&&&&&&&&&&&  &&&&&" ;19
+	.byte "&&&&&&&&&&&&&&&  &&&&&" ;20
+	.byte "&&&&&&&&&&&&&&&  &&&&&" ;21
+	.byte "&&&&&&&&&&&&&&&  &&&&&" ;22
+	.byte "&&&&&&&&&&&&&&&  &&&&",0 ;23
+
+; GameMap3:
+; 	.byte "                      "	;1
+; 	.byte "                      "	;2
+; 	.byte "                      "	;3
+; 	.byte "                      "	;4
+; 	.byte "                      "	;5
+; 	.byte "                      "	;6
+; 	.byte "                      "	;7
+; 	.byte "                      ",0	;8
+; 	.byte "                      "	;9		;1
+; 	.byte "                     #"	;10		;2
+; 	.byte "                    ##"  ;11		;3
+; 	.byte "                   ###" ;12		;4
+; 	.byte "                  ####" ;13		;5
+; 	.byte "                 #####" ;14		;6
+; 	.byte "                ######" ;15		;7
+; 	.byte "               #######" ;16		;8
+; 	.byte "              ########" ;17		;9
+; 	.byte "&&&&&&&  &&&&&&&&&&&&&",0 ;18		;10
+; 	.byte "&&&&&&&  &&&&&&&&&&&&&" ;19
+; 	.byte "&&&&&&&  &&&&&&&&&&&&&" ;20
+; 	.byte "&&&&&&&  &&&&&&&&&&&&&" ;21
+; 	.byte "&&&&&&&  &&&&&&&&&&&&&" ;22
+; 	.byte "&&&&&&&  &&&&&&&&&&&&",0 ;23
