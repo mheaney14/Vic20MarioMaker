@@ -395,7 +395,7 @@ cll:				;Printing the white screen among the black background
 
 
 
-
+RDTIM = $FFDE
 
 
 
@@ -446,14 +446,42 @@ printMap1End:
 	jmp PlaymodeStart
 
 PlaymodeStart:
-	lda #'@				; Draw Mario at beginning
+	lda #'@				; Draw Mario at beginning *******Should change to ( in master
 	sta $1008
 	ldy #0
 	sty $1006
 	ldx #16
 	stx $1007
 	jsr drawing
+	ldx #3
+	stx $1003
+	jsr displayLives
+	lda #'0
+	sta $1004
+	jsr drawScore
+	lda #'2
+	sta $1001
+	lda #'0
+	sta $1002	;sets timer to arbitrary initial value
+	jsr RDTIM
+	stx $1bfe
+	jsr timerLoadandDisplay
 
+	
+playTimerLoop:
+	jsr RDTIM
+	cpx $1bfe
+	beq finishPlayTimerTest	
+	jsr decrementTimer
+	jsr timerLoadandDisplay
+	jsr RDTIM
+	stx $1bfe
+
+finishPlayTimerTest:
+	jsr playInput
+	jmp playTimerLoop
+	rts
+	
 playInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
@@ -465,7 +493,7 @@ playInput:
 	beq playjmpSkey
 	cmp #'D
 	beq playjmpDkey
-	jmp playInput		; If there is no input
+	rts
 
 ; ;The codes are too long that we can't directly branching out
 playjmpWkey:
@@ -501,7 +529,7 @@ collided:
 	rts
 
 playdKey:						;press D to move right
-	; Check if the current position is at the end of the line, if yes go back to playInput
+	; Check if the current position is at the end of the line, if yes go back to rts
 	lda $1006
 	cmp #21
 	beq playdKeyEnd
@@ -527,34 +555,30 @@ playdKey:						;press D to move right
 	inx
 	stx $1006
 	jsr drawing
-	jmp playInput
+	rts
 playdkeyCollide:
-	jmp playInput
+	cmp #'#
+	beq pressDNP
+	cmp #'$
+	beq pressDNP
+	cmp #'&
+	beq pressDNP
+	ldx $1006
+	inx
+	stx $1006
+	jsr drawing
+	ldx $1006
+	dex
+	stx $1006
+	jsr drawing
+pressDNP:
+	rts
 playdKeyEnd:
 	jsr CLEARSCREEN
-	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
-	ldx $1011
-	ldy $1000
-	iny
-	sty $1000
-	ldy $1000
-	; sty $1013,x
 
-	; Increase the $1011
-	inx 
-	stx $1011 
-	ldx $1000
-	inx
-	stx $1000
-
-	; reset the current x y position
-	lda #0
-	sta $1006
-	lda #16
-	sta $1007
-
+	
 	jsr drawing
-	jmp playInput
+	rts
 
 
 playwKey:
@@ -585,10 +609,10 @@ playwKey:
 	; go to drawing
 	jsr drawing
 playwKeyEnd:
-	jmp playInput
+	rts
 
 playaKey:
-	; Check if x = 0 then you can't move left anymore, go back to playInput
+	; Check if x = 0 then you can't move left anymore, go back to rts
 	lda $1006
 	cmp #0
 	beq playaKeyEnd
@@ -614,7 +638,7 @@ playaKey:
 	stx $1006
 	jsr drawing
 playaKeyEnd:
-	jmp playInput
+	rts
 
 ; Move down
 playsKey:
@@ -643,7 +667,7 @@ playsKey:
 	stx $1007
 	jsr drawing
 playsKeyEnd:
-	jmp playInput
+	rts
 
 storeItem:
 	ldx $1012
@@ -652,6 +676,124 @@ storeItem:
 	inx
 	stx $1012
 	rts
+
+timerLoadandDisplay:		;Loading timer value from $1001 and $1002 and displaying it in top right
+	ldx #0          ; Row
+    ldy #20          ; Column
+    clc             ; Clear carray flag
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1001
+	jsr CHROUT
+	ldx #0          ; Row
+    ldy #21          ; Column
+	jsr $fff0       ; Plot - move the cursor there
+	lda $1002
+	jsr CHROUT
+	rts
+
+decrementTimer:	;decrements the current value in $1002. If the value is zero it wraps around to 9 and decrements value in $1001. If $1001 is 0 when it attempts to decrement, the timer does not decrement
+	lda $1002
+zeroTest:
+	cmp #'0
+	bne subTimer
+endTest:
+	lda $1001
+	cmp #'0
+	bne continueDecrement
+	jsr CLEARSCREEN
+	jmp finishDecrement
+continueDecrement:
+	tax
+	dex
+	txa
+	sta $1001
+	lda #'9
+	sta	$1002
+	jmp finishDecrement
+subTimer:
+	tax
+	dex
+	txa
+	sta $1002
+finishDecrement:
+	rts
+
+drawScore:	;Draw current score (single digit) at top-center of screen
+	ldx #0
+	ldy #11
+	clc
+	jsr $fff0
+	lda #'0
+	jsr CHROUT
+	
+	ldx #0
+	ldy #12
+	clc
+	jsr $fff0
+	lda $1004
+	jsr CHROUT
+	rts
+	
+gainPoint:		;Call on collision with coin, coin-block, or any other object that increases score
+	ldx $1004
+	inx
+	stx $1004
+	jsr drawScore
+	rts
+	
+	
+displayLives:
+	ldx $1003
+	cpx #1
+	beq drOneLife
+	cpx #2
+	beq drOneLife
+	cpx #3
+	beq drThreeLife
+	jmp drLifeDone
+drThreeLife:
+	ldx #0
+	ldy #2
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drTwoLife:
+	ldy #1
+	clc 
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drOneLife:
+	ldy #0
+	clc
+	jsr $FFF0
+	lda #'@
+	jsr CHROUT
+drLifeDone:
+	rts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 drawing:
 	ldy $1006
