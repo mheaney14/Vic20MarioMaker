@@ -606,8 +606,40 @@ playwKey:
 	ldx $1007
 	dex
 	stx $1007
+	
+	ldx $1006
+	cpx #21
+	beq drawBeforeFall
+	inx
+	stx $1006
+drawBeforeFall:
 	; go to drawing
 	jsr drawing
+waitForFall:	
+	jsr RDTIM
+	cpx $1bfe
+	beq waitForFall
+	
+	jsr checkCollide
+
+	; Check collision result
+	lda $100a
+	cmp #0
+	bne playwKeyEnd
+	
+	jsr clearCharacter
+	ldy $1007
+	iny
+	sty $1007
+	ldx $1006
+	cpx #21
+	beq drawAfterFall
+	inx
+	stx $1006
+drawAfterFall:
+	jsr drawing
+	rts
+	
 playwKeyEnd:
 	rts
 
