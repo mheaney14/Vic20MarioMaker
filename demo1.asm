@@ -652,32 +652,32 @@ playdKeyEnd:
 
 playwKey:
 	; If y = 0 then you can't move up and thus the move can't be made
-	lda $1007 
-	cmp #0
-	beq playwKeyEnd
-
-	; Check collision
-	lda $1006
-	sta $1900
-	lda $1007
-	sbc #9
-	sta $1901
-	jsr checkCollide
-	
-	; Check collision result
-	lda $100a
-	cmp #0
-	bne playwKeyEnd
-
-	; Erase the current position Mario
 	jsr clearCharacter
-	; y = y - 1, store back into 1007
-	ldx $1007
-	dex
-	stx $1007
-	; go to drawing
+	ldy $1007
+	dey
+	sty $1007
+	ldx $1006
+	cpx #21
+	beq drawBeforeFall
+	inx
+	stx $1006
+drawBeforeFall:
 	jsr drawing
-playwKeyEnd:
+waitForFall:
+	jsr RDTIM
+	cpx $1bfe
+	beq waitForFall
+	jsr clearCharacter
+	ldy $1007
+	iny
+	sty $1007
+	ldx $1006
+	cpx #21
+	beq drawAfterFall
+	inx
+	stx $1006
+drawAfterFall:
+	jsr drawing
 	rts
 
 playaKey:
@@ -1283,11 +1283,37 @@ playdCreateKeyEnd:
 
 playwCreateKey:
 	; If y = 0 then you can't move up and thus the move can't be made
-	lda $1007 
-	cmp #0
-	beq playwCreateKeyEnd
 
-
+	jsr clearCharacter
+	ldy $1007
+	dey
+	sty $1007
+	ldx $1006
+	cpx #21
+	beq drawBeforeFallCreate
+	inx
+	stx $1006
+drawBeforeFallCreate:
+	jsr drawing
+waitForFallCreate:
+	jsr RDTIM
+	cpx $1bfe
+	beq waitForFallCreate
+	jsr clearCharacter
+	ldy $1007
+	iny
+	sty $1007
+	ldx $1006
+	cpx #21
+	beq drawAfterFallCreate
+	inx
+	stx $1006
+drawAfterFallCreate:
+	jsr drawing
+	rts
+	
+	
+	
 	; Erase the current position Mario
 	jsr clearCharacter
 	; y = y - 1, store back into 1007
