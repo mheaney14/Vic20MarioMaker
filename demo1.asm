@@ -347,8 +347,6 @@ printMap2End:
 	jsr CHROUT
 	rts
 
-
-
 ;***********************************************************
 ;Enter the play mode
 playModeInit:
@@ -419,82 +417,82 @@ jumpToPlayDKey:
 ;*****************************************************************************************
 ;Play mode functions
 ; Draw Game map 3
-printMap3Init:
-	ldy #0
-printMap3:
-	lda GameMap3,y
-	cmp #0			
-	beq printMap3RestInit
-	jsr CHROUT
-	iny
-	jmp printMap3
-printMap3RestInit:
-	ldy #0
-printMap3Rest:
-	lda GameMap3+177,y
-	cmp #0			
-	beq printMap3FinalInit
-	jsr storeItem
-	lda GameMap3+177,y
-	jsr CHROUT
-	iny
-	jmp printMap3Rest
-printMap3FinalInit:
-	ldy #0
-printMap3Final:
-	lda GameMap3+398,y
-	cmp #0			
-	beq printMap3End
-	jsr CHROUT
-	iny
-	jmp printMap3Final
-printMap3End:
-	ldx #21
-	ldy #43
-	clc 
-	jsr $fff0
-	lda #'&
-	jsr CHROUT
-	rts
-; Draw Game map 4
-printMap4Init:
-	ldy #0
-printMap4:
-	lda GameMap4,y
-	cmp #0			
-	beq printMap4RestInit
-	jsr CHROUT
-	iny
-	jmp printMap4
-printMap4RestInit:
-	ldy #0
-printMap4Rest:
-	lda GameMap4+177,y
-	cmp #0			
-	beq printMap4FinalInit
-	jsr storeItem
-	lda GameMap4+177,y
-	jsr CHROUT
-	iny
-	jmp printMap4Rest
-printMap4FinalInit:
-	ldy #0
-printMap4Final:
-	lda GameMap4+398,y
-	cmp #0			
-	beq printMap4End
-	jsr CHROUT
-	iny
-	jmp printMap4Final
-printMap4End:
-	ldx #21
-	ldy #43
-	clc 
-	jsr $fff0
-	lda #'&
-	jsr CHROUT
-	rts
-; Function that store items into the stack
+; printMap3Init:
+; 	ldy #0
+; printMap3:
+; 	lda GameMap3,y
+; 	cmp #0			
+; 	beq printMap3RestInit
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap3
+; printMap3RestInit:
+; 	ldy #0
+; printMap3Rest:
+; 	lda GameMap3+177,y
+; 	cmp #0			
+; 	beq printMap3FinalInit
+; 	jsr storeItem
+; 	lda GameMap3+177,y
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap3Rest
+; printMap3FinalInit:
+; 	ldy #0
+; printMap3Final:
+; 	lda GameMap3+398,y
+; 	cmp #0			
+; 	beq printMap3End
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap3Final
+; printMap3End:
+; 	ldx #21
+; 	ldy #43
+; 	clc 
+; 	jsr $fff0
+; 	lda #'&
+; 	jsr CHROUT
+; 	rts
+; ; Draw Game map 4
+; printMap4Init:
+; 	ldy #0
+; printMap4:
+; 	lda GameMap4,y
+; 	cmp #0			
+; 	beq printMap4RestInit
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap4
+; printMap4RestInit:
+; 	ldy #0
+; printMap4Rest:
+; 	lda GameMap4+177,y
+; 	cmp #0			
+; 	beq printMap4FinalInit
+; 	jsr storeItem
+; 	lda GameMap4+177,y
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap4Rest
+; printMap4FinalInit:
+; 	ldy #0
+; printMap4Final:
+; 	lda GameMap4+398,y
+; 	cmp #0			
+; 	beq printMap4End
+; 	jsr CHROUT
+; 	iny
+; 	jmp printMap4Final
+; printMap4End:
+; 	ldx #21
+; 	ldy #43
+; 	clc 
+; 	jsr $fff0
+; 	lda #'&
+; 	jsr CHROUT
+; 	rts
+; ; Function that store items into the stack
 storeItem:
 	ldx $1012
 	sta $1013,x
@@ -503,103 +501,103 @@ storeItem:
 	stx $1012
 	rts
 
-checkCollide:
-	lda $1900
-	sta $1903
-	ldx $1901
-colliCal:
-	lda $1903
-	adc #21
-	sta $1903
-	dex
-	cpx #0
-	bne colliCal
+; checkCollide:
+; 	lda $1900
+; 	sta $1903
+; 	ldx $1901
+; colliCal:
+; 	lda $1903
+; 	adc #21
+; 	sta $1903
+; 	dex
+; 	cpx #0
+; 	bne colliCal
 
-	ldx #0
-	ldy #0
-	clc 
-	jsr $FFF0
-	ldy $1903
-	lda $1013,y
-	jsr CHROUT
+; 	ldx #0
+; 	ldy #0
+; 	clc 
+; 	jsr $FFF0
+; 	ldy $1903
+; 	lda $1013,y
+; 	jsr CHROUT
 
-	ldy $1903
-	lda $1013,y
-	cmp #' 
-	bne collided
-	lda #0
-	sta $100a
-	rts
-collided:
-	lda #1
-	sta $100a
-	rts
-;Draw current score (single digit) at top-center of screen
-dKeyP:						;press D to move right
-	; Check if the current position is at the end of the line, if yes go back to userInput
-	lda $1006
-	cmp #21
-	beq dKeyPEnd
-	; Check collision
-	lda $1006
-	adc #1
-	sta $1900
-	lda $1007
-	sbc #7
-	sta $1901
-	jsr checkCollide
-	; Check collision result
-	lda $100a
-	cmp #0
-	bne dkeyPCollide
-	; Erase the current position Mario
-	jsr clearCharacter
-	; Otherwise increment x position by 1 
-	ldx $1006
-	inx
-	stx $1006
-	jsr drawing
-	jmp playInput
-dkeyPCollide:
-	; check Mario touch what
-	cmp #'#
-	beq dkeyCNP
-	cmp #'$
-	beq dkeyCNP
-	cmp #'&
-	beq dkeyCNP
-	ldx $1006
-	inx
-	stx $1006
-	jsr drawing
-	ldx $1006
-	dex
-	stx $1006
-	jsr drawing
-dkeyCNP:
-	jmp playInput
-dKeyPEnd:
-	jsr CLEARSCREEN
-	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
-	ldx $1011
-	ldy $1000
-	iny
-	sty $1000
-	ldy $1000
-	; sty $1013,x
-	; Increase the $1011
-	inx 
-	stx $1011 
-	ldx $1000
-	inx
-	stx $1000
-	; reset the current x y position
-	lda #0
-	sta $1006
-	lda #16
-	sta $1007
-	jsr drawing
-	jmp playInput
+; 	ldy $1903
+; 	lda $1013,y
+; 	cmp #' 
+; 	bne collided
+; 	lda #0
+; 	sta $100a
+; 	rts
+; collided:
+; 	lda #1
+; 	sta $100a
+; 	rts
+; ;Draw current score (single digit) at top-center of screen
+; dKeyP:						;press D to move right
+; 	; Check if the current position is at the end of the line, if yes go back to userInput
+; 	lda $1006
+; 	cmp #21
+; 	beq dKeyPEnd
+; 	; Check collision
+; 	lda $1006
+; 	adc #1
+; 	sta $1900
+; 	lda $1007
+; 	sbc #7
+; 	sta $1901
+; 	jsr checkCollide
+; 	; Check collision result
+; 	lda $100a
+; 	cmp #0
+; 	bne dkeyPCollide
+; 	; Erase the current position Mario
+; 	jsr clearCharacter
+; 	; Otherwise increment x position by 1 
+; 	ldx $1006
+; 	inx
+; 	stx $1006
+; 	jsr drawing
+; 	jmp playInput
+; dkeyPCollide:
+; 	; check Mario touch what
+; 	cmp #'#
+; 	beq dkeyCNP
+; 	cmp #'$
+; 	beq dkeyCNP
+; 	cmp #'&
+; 	beq dkeyCNP
+; 	ldx $1006
+; 	inx
+; 	stx $1006
+; 	jsr drawing
+; 	ldx $1006
+; 	dex
+; 	stx $1006
+; 	jsr drawing
+; dkeyCNP:
+; 	jmp playInput
+; dKeyPEnd:
+; 	jsr CLEARSCREEN
+; 	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
+; 	ldx $1011
+; 	ldy $1000
+; 	iny
+; 	sty $1000
+; 	ldy $1000
+; 	; sty $1013,x
+; 	; Increase the $1011
+; 	inx 
+; 	stx $1011 
+; 	ldx $1000
+; 	inx
+; 	stx $1000
+; 	; reset the current x y position
+; 	lda #0
+; 	sta $1006
+; 	lda #16
+; 	sta $1007
+; 	jsr drawing
+; 	jmp playInput
 
 ; wKeyP:
 ; 	; If y = 0 then you can't move up and thus the move can't be made
