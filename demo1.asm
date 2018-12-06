@@ -302,8 +302,11 @@ wKeyPlay:
 	dey
 	sty $1008
 	ldx $1007
+	cpx #21
+	beq drawBeforeFall
 	inx
 	stx $1007
+drawBeforeFall:
 	jsr drawPlayerMario
 waitForFall:
 	jsr RDTIM
@@ -314,8 +317,11 @@ waitForFall:
 	iny
 	sty $1008
 	ldx $1007
+	cpx #21
+	beq drawAfterFall
 	inx
 	stx $1007
+drawAfterFall:
 	jsr drawPlayerMario
 	rts
 	
@@ -907,6 +913,7 @@ endTest:
 	cmp #'0
 	bne continueDecrement
 	jsr CLEARSCREEN
+	jmp finishDecrement
 continueDecrement:
 	tax
 	dex
