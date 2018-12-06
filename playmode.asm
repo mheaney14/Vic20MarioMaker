@@ -460,14 +460,15 @@ cll:				;Printing the white screen among the black background
     sta 7680,x      ; screen memory
     sta 7680+256,x
     dex
-    bne cll
-	
+    bne cll	
 ;Initialize stack counter ($1011) and stack end pointer ($1012) to 0
 	lda #0
 	sta $1011
 	lda #0
 	sta $1012
 
+; Function to draw play mode map
+printMap1Init:
 	ldy #0
 printMap1:
 	lda GameMap1,y
@@ -806,10 +807,3 @@ GameMap1:
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;21
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;22
 	.byte "&&&&&&  &&&&&&&&&&&&&",0 ;23
-
-
-endGameMessage:
-	.byte "END GAME", 0
-
-testMap:
-	.byte "1 2 3 4 5 6 7 8 9",0
