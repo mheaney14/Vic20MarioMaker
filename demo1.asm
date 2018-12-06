@@ -551,6 +551,7 @@ playTimerLoop:
 finishPlayTimerTest:
 	jsr playInput
 	jmp playTimerLoop
+	jsr CLEARSCREEN
 	rts
 	
 playInput:
@@ -1179,8 +1180,142 @@ playCreatedMap:
 	sta $1011
 
 	jsr drawMap
-	jsr PlaymodeStart
+	jsr PlayCreatmodeStart
 
+	
+PlayCreatmodeStart:
+	lda #'@				; Draw Mario at beginning *******Should change to ( in master
+	sta $1008
+	ldy #0
+	sty $1006
+	ldx #16
+	stx $1007
+	jsr drawing
+	ldx #3
+	stx $1003
+	jsr displayLives
+	lda #'0
+	sta $1004
+	jsr drawScore
+	lda #'2
+	sta $1001
+	lda #'0
+	sta $1002	;sets timer to arbitrary initial value
+	jsr RDTIM
+	stx $1bfe
+	jsr timerLoadandDisplay
+
+	
+playCreateTimerLoop:
+	jsr RDTIM
+	cpx $1bfe
+	beq finishPlayCreateTimerTest	
+	jsr decrementTimer
+	jsr timerLoadandDisplay
+	jsr RDTIM
+	stx $1bfe
+
+finishPlayCreateTimerTest:
+	jsr playCreateInput
+	jmp playCreateTimerLoop
+	jsr CLEARSCREEN
+	rts
+	
+playCreateInput:
+	lda #0
+	jsr	CHRIN		;accept user input for test number 
+	cmp #'W			; Branch to the coressponding key
+	beq playCreatejmpWkey
+	cmp #'A
+	beq playCreatejmpAkey
+	cmp #'S
+	beq playCreatejmpSkey
+	cmp #'D
+	beq playCreatejmpDkey
+	rts
+
+; ;The codes are too long that we can't directly branching out
+playCreatejmpWkey:
+	jmp playwCreateKey
+playCreatejmpAkey:
+	jmp playaCreateKey
+playCreatejmpSkey:
+
+playCreatejmpDkey:
+	jmp playCreatedKey
+
+
+playCreatedKey:						;press D to move right
+	; Check if the current position is at the end of the line, if yes go back to rts
+	lda $1006
+	cmp #21
+	beq playdCreateKeyEnd
+
+	; Erase the current position Mario
+	jsr clearCharacter
+	; Otherwise increment x position by 1 
+	ldx $1006
+	inx
+	stx $1006
+	jsr drawing
+	rts
+playdCreatekeyCollide:
+	cmp #'#
+	beq pressCreateDNP
+	cmp #'$
+	beq pressCreateDNP
+	cmp #'&
+	beq pressCreateDNP
+	ldx $1006
+	inx
+	stx $1006
+	jsr drawing
+	ldx $1006
+	dex
+	stx $1006
+	jsr drawing
+pressCreateDNP:
+	rts
+playdCreateKeyEnd:
+	jsr CLEARSCREEN
+	jsr drawing
+	rts
+
+playwCreateKey:
+	; If y = 0 then you can't move up and thus the move can't be made
+	lda $1007 
+	cmp #0
+	beq playwCreateKeyEnd
+
+
+	; Erase the current position Mario
+	jsr clearCharacter
+	; y = y - 1, store back into 1007
+	ldx $1007
+	dex
+	stx $1007
+	; go to drawing
+	jsr drawing
+playwCreateKeyEnd:
+	rts
+
+playaCreateKey:
+	; Check if x = 0 then you can't move left anymore, go back to rts
+	lda $1006
+	cmp #0
+	beq playaCreateKeyEnd
+
+
+	; Otherwise clearCharacter, decrement x by 1 and go to drawing
+	jsr clearCharacter
+	ldx $1006
+	dex
+	stx $1006
+	jsr drawing
+playaCreateKeyEnd:
+	rts
+
+	
 drawMap:
 	; Store the current stack counter to stack end pointer, reload stack counter to 0
 
@@ -1264,10 +1399,11 @@ drawingBlockLoop:
 	lda #'#
 	jsr CHROUT
 	jmp drawingBlock
-	jsr PlaymodeStart
+	
+;	jsr PlaymodeStart
 	
 end:
-	jmp end
+	jmp realEnd
 	
 	
 timerLoadandDisplay:		;Loading timer value from $1001 and $1002 and displaying it in top right
@@ -1310,3 +1446,5 @@ GameMap1:
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;21
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;22
 	.byte "&&&&&&  &&&&&&&&&&&&&",0 ;23
+realEnd:
+	jmp realEnd
