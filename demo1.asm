@@ -1264,6 +1264,7 @@ drawingBlockLoop:
 	lda #'#
 	jsr CHROUT
 	jmp drawingBlock
+	jsr PlaymodeStart
 	
 end:
 	jmp end
