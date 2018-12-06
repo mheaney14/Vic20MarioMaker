@@ -227,9 +227,9 @@ printMap1End:
 	sta $1004
 	jsr drawScore
 ;***************Timer initialization	
-	lda #'1
+	lda #'2
 	sta $1001
-	lda #'9
+	lda #'0
 	sta $1002	;sets timer to arbitrary initial value
 	jsr RDTIM
 	stx $1bfe
@@ -270,6 +270,8 @@ keyChecks:
 	beq aKeyPlay
 	cmp #'D
 	beq dKeyPlay
+	cmp #'W
+	beq wKeyPlay
 	rts
 aKeyPlay:
 	lda $1007
@@ -293,7 +295,24 @@ dKeyPlay:
 	stx $1007
 	jsr drawPlayerMario
 	rts
-
+	
+wKeyPlay:
+	jsr clearCharacter
+	ldy $1008
+	dey
+	sty $1008
+	jsr drawPlayerMario
+waitForFall:
+	jsr RDTIM
+	cpx $1bfe
+	beq waitForFall
+	jsr clearCharacter
+	ldy $1008
+	iny
+	sty $1008
+	jsr drawPlayerMario
+	rts
+	
 endKeyChecks:
 	rts
 
@@ -881,7 +900,8 @@ endTest:
 	lda $1001
 	cmp #'0
 	bne continueDecrement
-	jmp finishDecrement
+	jsr CLEARSCREEN
+	jsr printEndGameMessage
 continueDecrement:
 	tax
 	dex
