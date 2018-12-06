@@ -414,7 +414,7 @@ donePrintMenu:
 	jmp donePrintMenu
 menuDown:
 	lda $1000
-	cmp #16
+	cmp #14
 	beq MenuDownEnd
 	ldx $1000
 	ldy #3
