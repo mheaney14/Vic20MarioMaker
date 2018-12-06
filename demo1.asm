@@ -218,6 +218,10 @@ printMap1End:
 	lda #'&
 	jsr CHROUT
 
+	
+playModeMain:
+
+;****************Intialize lives to 3	
 	ldx #3
 	stx $1003
 	jsr displayLives
@@ -261,6 +265,7 @@ finishPlayTimerTest:
 	jsr keyChecks
 	
 	jmp playTimerLoop
+	rts
 	
 	jmp end
 
@@ -880,6 +885,9 @@ last:
 
 
 doneDrawMap:
+
+	jsr playModeMain
+
 	jmp end
 
 
