@@ -357,7 +357,6 @@ playModeInit:
 	ldx #3
 	stx $1003
 	jsr displayLives
-
 	lda #'(			; Draw Mario at beginning
 	sta $1008
 	ldy #0
@@ -365,7 +364,6 @@ playModeInit:
 	ldx #16
 	stx $1007
 	jsr drawing
-
 ;Initialize score to zero
 	lda #'0
 	sta $1004
@@ -378,7 +376,6 @@ playModeInit:
 	jsr RDTIM
 	stx $1bfe
 	jsr timerLoadandDisplay
-
 ;Loop that continuously checks if internal clock has changed and updates timer if it does (could also be good place to put the check for user input)
 playTimerLoop:
 	jsr RDTIM
@@ -390,32 +387,106 @@ playTimerLoop:
 	stx $1bfe
 finishPlayTimerTest:
 	jmp playTimerLoop
-playInput:
-	lda #0
-	jsr	CHRIN		;accept user input for test number 
-	cmp #'W			; Branch to the coressponding key
-	beq jumpToPlayWKey
-	cmp #'A
-	beq jumpToPlayAKey
-	cmp #'S
-	beq jumpToPlaySKey
-	cmp #'D
-	beq jumpToPlayDKey
-	jmp playInput		; If there is no input
-
-jumpToPlayWKey:
-	; jmp wKeyP
-jumpToPlayAKey:
-	; jmp aKeyP
-jumpToPlaySKey:
-	; jmp sKeyP
-jumpToPlayDKey:
-	; jmp dKeyP
 
 	jmp end
 
 ;*****************************************************************************************
 ;Play mode functions
+; Function that store items into the stack
+storeItem:
+	ldx $1012
+	sta $1013,x
+	ldx $1012
+	inx
+	stx $1012
+	rts
+
+checkCollide:
+	lda $1900
+	sta $1903
+	ldx $1901
+colliCal:
+	lda $1903
+	adc #21
+	sta $1903
+	dex
+	cpx #0
+	bne colliCal
+	ldy $1903
+	lda $1013,y
+	cmp #' 
+	bne collided
+	lda #0
+	sta $100a
+	rts
+collided:
+	lda #1
+	sta $100a
+	rts
+
+pressD:						;press D to move right
+	lda $1006
+	cmp #21
+	beq pressDEnd
+	lda $1006
+	adc #1
+	sta $1900
+	lda $1007
+	sbc #7
+	sta $1901
+	jsr checkCollide
+	lda $100a
+	cmp #0
+	bne pressDCollide
+	jsr clearCharacter
+	ldx $1006
+	inx
+	stx $1006
+	jsr drawing
+	; jmp playInput
+pressDCollide:
+	; check Mario touch what
+	cmp #'#
+	beq pressDNP
+	; cmp #'$
+	; beq pressDNP
+	; cmp #'&
+	; beq pressDNP
+	; ldx $1006
+	; inx
+	; stx $1006
+; 	jsr drawing
+; 	ldx $1006
+; 	dex
+; 	stx $1006
+; 	jsr drawing
+pressDNP:
+; 	; jmp playInput
+pressDEnd:
+	jsr CLEARSCREEN
+	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
+	ldx $1011
+	ldy $1000
+	iny
+	sty $1000
+	ldy $1000
+	; sty $1013,x
+	; Increase the $1011
+	inx 
+	stx $1011 
+	ldx $1000
+	inx
+	stx $1000
+	; reset the current x y position
+	lda #0
+	sta $1006
+	lda #16
+	sta $1007
+	jsr drawing
+	; jmp playInput
+
+
+
 ; Draw Game map 3
 ; printMap3Init:
 ; 	ldy #0
@@ -492,112 +563,11 @@ jumpToPlayDKey:
 ; 	lda #'&
 ; 	jsr CHROUT
 ; 	rts
-; ; Function that store items into the stack
-storeItem:
-	ldx $1012
-	sta $1013,x
-	ldx $1012
-	inx
-	stx $1012
-	rts
 
-; checkCollide:
-; 	lda $1900
-; 	sta $1903
-; 	ldx $1901
-; colliCal:
-; 	lda $1903
-; 	adc #21
-; 	sta $1903
-; 	dex
-; 	cpx #0
-; 	bne colliCal
 
-; 	ldx #0
-; 	ldy #0
-; 	clc 
-; 	jsr $FFF0
-; 	ldy $1903
-; 	lda $1013,y
-; 	jsr CHROUT
 
-; 	ldy $1903
-; 	lda $1013,y
-; 	cmp #' 
-; 	bne collided
-; 	lda #0
-; 	sta $100a
-; 	rts
-; collided:
-; 	lda #1
-; 	sta $100a
-; 	rts
-; ;Draw current score (single digit) at top-center of screen
-; dKeyP:						;press D to move right
-; 	; Check if the current position is at the end of the line, if yes go back to userInput
-; 	lda $1006
-; 	cmp #21
-; 	beq dKeyPEnd
-; 	; Check collision
-; 	lda $1006
-; 	adc #1
-; 	sta $1900
-; 	lda $1007
-; 	sbc #7
-; 	sta $1901
-; 	jsr checkCollide
-; 	; Check collision result
-; 	lda $100a
-; 	cmp #0
-; 	bne dkeyPCollide
-; 	; Erase the current position Mario
-; 	jsr clearCharacter
-; 	; Otherwise increment x position by 1 
-; 	ldx $1006
-; 	inx
-; 	stx $1006
-; 	jsr drawing
-; 	jmp playInput
-; dkeyPCollide:
-; 	; check Mario touch what
-; 	cmp #'#
-; 	beq dkeyCNP
-; 	cmp #'$
-; 	beq dkeyCNP
-; 	cmp #'&
-; 	beq dkeyCNP
-; 	ldx $1006
-; 	inx
-; 	stx $1006
-; 	jsr drawing
-; 	ldx $1006
-; 	dex
-; 	stx $1006
-; 	jsr drawing
-; dkeyCNP:
-; 	jmp playInput
-; dKeyPEnd:
-; 	jsr CLEARSCREEN
-; 	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
-; 	ldx $1011
-; 	ldy $1000
-; 	iny
-; 	sty $1000
-; 	ldy $1000
-; 	; sty $1013,x
-; 	; Increase the $1011
-; 	inx 
-; 	stx $1011 
-; 	ldx $1000
-; 	inx
-; 	stx $1000
-; 	; reset the current x y position
-; 	lda #0
-; 	sta $1006
-; 	lda #16
-; 	sta $1007
-; 	jsr drawing
-; 	jmp playInput
+
+
 
 ; wKeyP:
 ; 	; If y = 0 then you can't move up and thus the move can't be made
@@ -1166,14 +1136,11 @@ last:
 noDrawMap:
 	inx
 	stx $1011
-	jmp drawCreatedMap
+	; jmp drawCreatedMap
 
 
 doneDrawMap:
 	jmp end
-
-
-
 end:
 	jmp end
 		
@@ -1261,7 +1228,7 @@ GameMap1:
 	.byte "              ?       " ;14		;6
 	.byte "                      " ;15		;7
 	.byte "                      " ;16		;8
-	.byte "    #        ]     [  " ;17		;9
+	.byte "    #        !     !  " ;17		;9
 	.byte "&&&&&&  &&&&&&&&&&&&&&",0 ;18		;10
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;19
 	.byte "&&&&&&  &&&&&&&&&&&&&&" ;20
@@ -1285,8 +1252,8 @@ GameMap2:
 	.byte "                      " ;13		;5
 	.byte "                      " ;14		;6
 	.byte "                      " ;15		;7
-	.byte "         ?            " ;16		;8
-	.byte "    !        ]     [  " ;17		;9
+	.byte "                     ?" ;16		;8
+	.byte "    !      !       !  " ;17		;9
 	.byte "&&&&&&  &&&&&&&  &&&&&",0 ;18		;10
 	.byte "&&&&&&  &&&&&&&  &&&&&" ;19
 	.byte "&&&&&&  &&&&&&&  &&&&&" ;20

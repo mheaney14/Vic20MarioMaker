@@ -526,20 +526,20 @@ PlaymodeStart:
 
 main:
 	jsr	music
-	jmp userInput
+	jmp playInput
 
-userInput:
+playInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
 	cmp #'W			; Branch to the coressponding key
-	beq jumpToWKey
+	beq playjmpWkey
 	cmp #'A
-	beq jumpToAKey
+	beq playjmpAkey
 	cmp #'S
-	beq jumpToSKey
+	beq playjmpSkey
 	cmp #'D
-	beq jumpToDKey
-	jmp userInput		; If there is no input
+	beq playjmpDkey
+	jmp playInput		; If there is no input
 
 waitLoop:
 	iny 
@@ -569,14 +569,14 @@ mainEnd:
 	jmp end
 
 ; ;The codes are too long that we can't directly branching out
-jumpToWKey:
-	jmp wKey
-jumpToAKey:
-	jmp aKey
-jumpToSKey:
-	jmp sKey
-jumpToDKey:
-	jmp dKey
+playjmpWkey:
+	jmp playwKey
+playjmpAkey:
+	jmp playaKey
+playjmpSkey:
+	jmp playsKey
+playjmpDkey:
+	jmp playdKey
 
 checkCollide:
 	lda $1900
@@ -589,15 +589,6 @@ colliCal:
 	dex
 	cpx #0
 	bne colliCal
-
-	ldx #0
-	ldy #0
-	clc 
-	jsr $FFF0
-	ldy $1903
-	lda $1013,y
-	jsr CHROUT
-
 	ldy $1903
 	lda $1013,y
 	cmp #' 
@@ -610,11 +601,11 @@ collided:
 	sta $100a
 	rts
 
-dKey:						;press D to move right
-	; Check if the current position is at the end of the line, if yes go back to userInput
+playdKey:						;press D to move right
+	; Check if the current position is at the end of the line, if yes go back to playInput
 	lda $1006
 	cmp #21
-	beq dKeyEnd
+	beq playdKeyEnd
 
 	; Check collision
 	lda $1006
@@ -628,7 +619,7 @@ dKey:						;press D to move right
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne dkeyCollide
+	bne playdkeyCollide
 
 	; Erase the current position Mario
 	jsr clearCharacter
@@ -637,10 +628,10 @@ dKey:						;press D to move right
 	inx
 	stx $1006
 	jsr drawing
-	jmp userInput
-dkeyCollide:
-	jmp userInput
-dKeyEnd:
+	jmp playInput
+playdkeyCollide:
+	jmp playInput
+playdKeyEnd:
 	jsr CLEARSCREEN
 	; Mark the end of map1 onto the stack, value = 50 + currentMapLevel
 	ldx $1011
@@ -664,15 +655,15 @@ dKeyEnd:
 	sta $1007
 
 	jsr drawing
-	jmp userInput
+	jmp playInput
 
 
 
-wKey:
+playwKey:
 	; If y = 0 then you can't move up and thus the move can't be made
 	lda $1007 
 	cmp #0
-	beq wKeyEnd
+	beq playwKeyEnd
 
 	; Check collision
 	lda $1006
@@ -685,7 +676,7 @@ wKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne wKeyEnd
+	bne playwKeyEnd
 
 	; Erase the current position Mario
 	jsr clearCharacter
@@ -695,14 +686,14 @@ wKey:
 	stx $1007
 	; go to drawing
 	jsr drawing
-wKeyEnd:
-	jmp userInput
+playwKeyEnd:
+	jmp playInput
 
-aKey:
-	; Check if x = 0 then you can't move left anymore, go back to userInput
+playaKey:
+	; Check if x = 0 then you can't move left anymore, go back to playInput
 	lda $1006
 	cmp #0
-	beq aKeyEnd
+	beq playaKeyEnd
 
 	; Check collision
 	lda $1006
@@ -716,7 +707,7 @@ aKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne aKeyEnd
+	bne playaKeyEnd
 
 	; Otherwise clearCharacter, decrement x by 1 and go to drawing
 	jsr clearCharacter
@@ -724,15 +715,15 @@ aKey:
 	dex
 	stx $1006
 	jsr drawing
-aKeyEnd:
-	jmp userInput
+playaKeyEnd:
+	jmp playInput
 
 ; Move down
-sKey:
+playsKey:
 	; You can't go down if you're at the bottom of the screen
 	lda $1007
 	cmp #22
-	beq sKeyEnd
+	beq playsKeyEnd
 
 	; Check collision
 	lda $1006
@@ -745,7 +736,7 @@ sKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne sKeyEnd
+	bne playsKeyEnd
 
 	; if you're not at the bottom, clear the screen, increment y position and draw
 	jsr clearCharacter
@@ -753,8 +744,8 @@ sKey:
 	inx
 	stx $1007
 	jsr drawing
-sKeyEnd:
-	jmp userInput
+playsKeyEnd:
+	jmp playInput
 
 drawing:
 	ldy $1006
