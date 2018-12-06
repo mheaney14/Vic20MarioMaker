@@ -603,6 +603,7 @@ drawL3:
 renewChar:
 	jsr displayLives
 	jsr drawScore
+	jsr timerLoadandDisplay
 	lda #'@				; Draw Mario at beginning *******Should change to ( in master
 	sta $1008
 	ldy #0
@@ -726,7 +727,7 @@ playsKey:
 	; Check collision result
 	lda $100a
 	cmp #0
-	bne playsKeyEnd
+	bne pleysKeyColli
 
 	; if you're not at the bottom, clear the screen, increment y position and draw
 	jsr clearCharacter
@@ -734,6 +735,15 @@ playsKey:
 	inx
 	stx $1007
 	jsr drawing
+	rts
+pleysKeyColli:
+	lda $100a
+	cmp #'[									;****************************** check goomba
+	bne playsKeyEnd
+	lda $1004
+	adc #1
+	sta $1004
+	jsr drawScore
 playsKeyEnd:
 	rts
 
@@ -769,6 +779,10 @@ endTest:
 	cmp #'0
 	bne continueDecrement
 	jsr CLEARSCREEN
+	ldx #0
+	ldy #0
+	clc
+	jsr $fff0
 	jmp gameOverMessage
 continueDecrement:
 	tax
