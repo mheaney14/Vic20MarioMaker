@@ -524,10 +524,6 @@ PlaymodeStart:
 	stx $1007
 	jsr drawing
 
-main:
-	jsr	music
-	jmp playInput
-
 playInput:
 	lda #0
 	jsr	CHRIN		;accept user input for test number 
@@ -540,33 +536,6 @@ playInput:
 	cmp #'D
 	beq playjmpDkey
 	jmp playInput		; If there is no input
-
-waitLoop:
-	iny 
-	cpy #20
-	bne waitLoop
-	rts
-
-music:
-	lda #0
-	sta $900e
-	lda #159
-	sta $900c
-	ldy #0	
-	jsr waitLoop
-	lda #179
-	sta $900c
-	ldy #0
-	jsr waitLoop
-	lda #199
-	sta $900c
-	ldy #0
-	jsr waitLoop
-	rts
-
-mainEnd:
-	jsr CLEARSCREEN
-	jmp end
 
 ; ;The codes are too long that we can't directly branching out
 playjmpWkey:
@@ -656,7 +625,6 @@ playdKeyEnd:
 
 	jsr drawing
 	jmp playInput
-
 
 
 playwKey:
