@@ -547,23 +547,15 @@ dKey:						;press D to move right
 	stx $1006
 	jsr drawing
 	jmp userInput
+
 dKeyEnd:
 	jsr CLEARSCREEN
-	; Mark the beginning of new map level onto the stack, increment $1000 by 1
-	ldx $1011
-	ldy $1000
-	iny
-	sty $1000
-	ldy $1000
-	tya
-	sta $1013,x
 
-	; Increase the $1011
-	inx 
-	stx $1011 
+	; Mark the beginning of new map level onto the stack, increment $1000 by 1
 	ldx $1000
 	inx
 	stx $1000
+
 
 	; Check if the previous value in the stack is >= 200 => it's a level value 
 	; Meaning you're moving around the maps without storing anything
@@ -578,7 +570,6 @@ dKeyEnd:
 	ldx $1011
 	inx 
 	stx $1011
-
 skipIncrement:
 	; Either x = $1011 or x = $1011 - 1, then increment it again
 	ldx $1011
@@ -586,8 +577,7 @@ skipIncrement:
 	sta $1013,x
 	inx
 	stx $1011 
-
-	; store $1011 to $1012, reset $1011, go to drawMap
+ 	; store $1011 to $1012, reset $1011, go to drawMap
 	lda $1011
 	sta $1012
 	lda #0
@@ -598,8 +588,6 @@ skipIncrement:
 	sta $1006
 	lda #0
 	sta $1007
-	lda #'@
-	sta $1008
 	jsr drawing
 	jmp userInput
 
@@ -623,7 +611,7 @@ wKeyEnd:
 aKey:
 	; Check if x = 0 then you can't move left anymore, go back to userInput
 	lda $1006
-	cmp #21
+	cmp #0
 	beq aKeyEnd
 	; Otherwise clearCharacter, decrement x by 1 and go to drawing
 	jsr clearCharacter
@@ -631,6 +619,8 @@ aKey:
 	dex
 	stx $1006
 	jsr drawing
+	jmp userInput
+
 aKeyEnd:
 	jsr CLEARSCREEN
 	; Decrement the current map level
@@ -638,7 +628,7 @@ aKeyEnd:
 	dex 
 	stx $1000
 
-	; store $1000 onto the stack, going back to the old map
+ 	; store $1000 onto the stack, going back to the old map
 	ldx $1011
 	dex
 	lda $1013,x
@@ -647,7 +637,6 @@ aKeyEnd:
 	ldx $1011
 	inx
 	stx $1011
-
 aSkipIncrement:
 	ldx $1011
 	lda $1000
@@ -661,7 +650,7 @@ aSkipIncrement:
 	sta $1011
 	jsr drawMap
 
-	lda #0
+ 	lda #0
 	sta $1006
 	lda #0
 	sta $1007
@@ -736,8 +725,8 @@ drawMap:
 	lda $1011
 	cmp $1012
 	bcs doneDrawMap
-	; if currentStack.value < currentMap => do nothing, as it is not the current map we want
-	; If currentStack.value == currentMap => go into innerLoop
+
+
 	ldx $1011
 	lda $1013,x
 	cmp $1000
@@ -782,7 +771,6 @@ innerDrawLoop:
 	lda $1013,x
 	cmp $1000
 	bcs drawMap
-	beq drawMap
 	jmp innerDrawLoop
 endDrawMap:
 	; Increment the stack counter
@@ -820,7 +808,6 @@ drawingBlockLoop:
 
 
 end:
-	jsr CLEARSCREEN
 	jmp end
 		
 endGameMessage:
