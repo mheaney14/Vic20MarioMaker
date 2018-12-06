@@ -901,7 +901,6 @@ endTest:
 	cmp #'0
 	bne continueDecrement
 	jsr CLEARSCREEN
-	jsr printEndGameMessage
 continueDecrement:
 	tax
 	dex
