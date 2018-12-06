@@ -363,94 +363,6 @@ loadChar2:
 	sta $1DFF
 
 ;******************* End of Graphics *******************
-
-start:		
-	jsr CLEARSCREEN
-    lda #0			; screen and border colors
-    sta $900F
-	lda #1			;Set the background of the character to white
-	sta $286		;Store it in $286 memory
-
-	;print out menu
-	lda #' 
-	ldx #$B2		; counter for number of spaces remaining
-printSpacesMenu:
-	jsr CHROUT		; print space
-	dex
-	cpx #0			; check if more spaces to print
-	bne printSpacesMenu
-	ldy #0
-	
-printMenu1:
-	lda menuMessage1,Y
-	cmp #0			; if there is more message to print
-	beq donePrintMenuInit
-	JSR CHROUT
-	iny
-	jmp printMenu1
-
-donePrintMenuInit:
-	ldx #12
-	stx $1000
-donePrintMenu:
-	ldx $1000
-	ldy #3
-	clc
-	jsr $fff0
-	lda #'@
-	jsr CHROUT
-
-	lda #0
-	jsr CHRIN
-	cmp #'S
-	beq menuDown
-	cmp #' 
-	beq menuSelect
-	jmp donePrintMenu
-menuDown:
-	lda $1000
-	cmp #16
-	beq MenuDownEnd
-	ldx $1000
-	ldy #3
-	clc
-	jsr $fff0
-	lda #' 
-	jsr CHROUT
-	lda $1000
-	adc #2
-	sta $1000
-	jmp donePrintMenu
-MenuDownEnd:
-	ldx $1000
-	ldy #3
-	clc
-	jsr $fff0
-	lda #' 
-	jsr CHROUT
-	lda #12
-	sta $1000
-	jmp donePrintMenu
-menuSelect:
-	lda $1000
-	cmp #12
-	beq toPlayMode
-; 	cmp #14
-; 	beq toCreateMode
-; 	cmp #16
-; 	beq toPlayCreated
-toPlayMode:
-	jmp playModeInit
-; toCreateMode:
-; 	jmp createMode
-; toPlayCreated:
-; 	jmp PlayCreated
-
-;***********************************************************
-;***********************************************************
-;***********************************************************
-;***********************************************************
-;Enter the play mode
 playModeInit:
 	ldx #0
 	ldy #0
@@ -461,6 +373,32 @@ cll:				;Printing the white screen among the black background
     sta 7680+256,x
     dex
     bne cll	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ;Initialize stack counter ($1011) and stack end pointer ($1012) to 0
 	lda #0
 	sta $1011
@@ -506,14 +444,6 @@ printMap1End:
 	jsr CHROUT
 
 	jmp PlaymodeStart
-
-storeItem:
-	ldx $1012
-	sta $1013,x
-	ldx $1012
-	inx
-	stx $1012
-	rts
 
 PlaymodeStart:
 	lda #'@				; Draw Mario at beginning
@@ -714,6 +644,14 @@ playsKey:
 	jsr drawing
 playsKeyEnd:
 	jmp playInput
+
+storeItem:
+	ldx $1012
+	sta $1013,x
+	ldx $1012
+	inx
+	stx $1012
+	rts
 
 drawing:
 	ldy $1006
