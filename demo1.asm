@@ -1264,8 +1264,11 @@ drawingBlockLoop:
 	lda #'#
 	jsr CHROUT
 	jmp drawingBlock
+	
 end:
 	jmp end
+	
+	
 timerLoadandDisplay:		;Loading timer value from $1001 and $1002 and displaying it in top right
 	ldx #0          ; Row
     ldy #20          ; Column
