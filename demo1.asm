@@ -301,6 +301,9 @@ wKeyPlay:
 	ldy $1008
 	dey
 	sty $1008
+	ldx $1007
+	inx
+	stx $1007
 	jsr drawPlayerMario
 waitForFall:
 	jsr RDTIM
@@ -310,6 +313,9 @@ waitForFall:
 	ldy $1008
 	iny
 	sty $1008
+	ldx $1007
+	inx
+	stx $1007
 	jsr drawPlayerMario
 	rts
 	
