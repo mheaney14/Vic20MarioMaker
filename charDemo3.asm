@@ -42,8 +42,8 @@ loadChar2:
 ; characters are 8 bytes
 ; each byte in binary represents a line of the char (1 => pixel on, 0 => pixel off)
 
-; Koopa characters represented by alternating '[ with '], and ', with '.
-	; Starts at $1CD8, $1CE8, $1D60 and $1D70
+; Koopa characters represented by alternating '+ with '-, and ', with '.
+	; Starts at $1D58, $1D68, $1D60 and $1D70
 ; Goomba characters represented by '! and '"
 	; Starts at $1D08, and $1D10
 ; Empty Box characters represented by '#
@@ -56,36 +56,38 @@ loadChar2:
 	; Starts at 1DF8
 ; Mario Character represented by '<, '>, '(, and ') (top left, top right, bottom left, bottom right)
 	; Starts at $1DE0, $1DF0, $1D40 and $1D48
+; Mario + colliding entity will be stored in '', '*, '/, or '= (top left, top right, bottom left, bottom right)
+	; Starts at $1D38, $1D50, $1D78, $1DE8
 
 setNewChars:
 	lda #$02
-	sta $1CD8
+	sta $1D58
 	lda #$10
-	sta $1CDD
-	sta $1CEC
+	sta $1D5D
+	sta $1D6C
 	lda #$18
 	sta $1D0A
 	sta $1D0E
 	sta $1D42
 	lda #$1C
-	sta $1CDB
+	sta $1D5B
 	lda #$1E
-	sta $1CEA
+	sta $1D6A
 	lda #$24
 	sta $1D0F
 	sta $1D46
 	lda #$28
-	sta $1CDE
-	sta $1CDF
-	sta $1CED
-	sta $1CEE
+	sta $1D5E
+	sta $1D5F
+	sta $1D6D
+	sta $1D6E
 	lda #$30
-	sta $1CE8
+	sta $1D68
 	lda #$36
-	sta $1CD9
-	sta $1CDA
+	sta $1D59
+	sta $1D5A
 	lda #$37
-	sta $1CE9
+	sta $1D69
 	lda #$3C
 	sta $1D0B
 	sta $1D40
@@ -93,8 +95,8 @@ setNewChars:
 	sta $1D44
 	sta $1D45
 	lda #$70
-	sta $1CDC
-	sta $1CEB
+	sta $1D5C
+	sta $1D6B
 	lda #$7E
 	sta $1D0C
 	sta $1D0D
@@ -144,7 +146,7 @@ setNewChars:
 	sta $1DFF
 
 	lda #0
-	sta $1CEF
+	sta $1D6F
 	sta $1D08
 	sta $1D09
 	ldx #0
@@ -166,72 +168,108 @@ set2ndChars:		; all these start initially blank
 printChars:
 	lda chars,Y
 	cmp #0			; if there is more to print
-	beq getKeyInput
+	beq jmpGetKeyInput
 	jsr CHROUT
 	iny
 	jmp printChars
 
 moveMyChar:
-	ldx #$10			; HERE FOR TESTING
-	ldy #$C0			; HERE FOR TESTING
-moveDown1:
+	ldx #$40			; HERE FOR TESTING
+	ldy #$48			; HERE FOR TESTING
+moveRight:		; store address of characters to move right in x and y
+	lda #$01
+	and GRAPHSTART2,Y
+	lsr			; set carry bit to bit 0 of Y (automatically uses accumulator)
+	ror GRAPHSTART2,X
+	txa
+	pha			; push X to stack
+	tya
+	tax			; put Y in X register
+	ror GRAPHSTART2,X
+	pla
+	tax			; put X back from stack
+	inx			; move next line of character
+	iny
+	txa
+	and #$07	; if more lines need to be done (x ends with a number 1-7 or 9-F, 0/8 => done)
+	bne moveRight
+
 	lda #0
-	asl			; set carry bit to 0 (automatically uses accumulator)
-	txa
-	adc #7		; shouldn't set carry bit
-	tax			; x = input+7
-	tya
-	adc #7		;shouldn't set carry bit
-	tay			; y = input+7
-	lda GRAPHSTART1,Y
-	pha			; push value at input Y + 7 to stack
-	txa
-	pha			; pushed input X + 7 to stack
-	tya
-	tax
-	dex			; X = Y-1 (Y=inputY+7, X=Y-1)
-	lda GRAPHSTART1,X	; load at Y-1
-	sta GRAPHSTART1,Y	; store at Y
-down1Loop1:
-	dex			; decrement to move to next line up
-	dey
-	lda GRAPHSTART1,X	; load at Y-1
-	sta GRAPHSTART1,Y	; store at Y
-	txa
-	and #7		; stop looping when last 3 bits of y are 0
-	bne down1Loop1
-	dex			; decrement to move to next line up
-	dey
-	lda GRAPHSTART1,X	; load at Y-1
-	sta GRAPHSTART1,Y	; store at Y
-	pla
-	tax			; input X+7 is back from stack
-	lda GRAPHSTART1,X
-	sta GRAPHSTART1,Y
-	txa
+	pha
+	pha
+	pha
+	lda #8
+	pha
+	jmp marioOverlap
+	
+jmpGetKeyInput:
+	jmp getKeyInput
+jmpMoveMyChar:
+	jmp moveMyChar
+	; Starts at $1DE0, $1DF0, $1D40 and $1D48 (Mario)
+	; Starts at $1D38, $1D50, $1D78 and $1DE8 (Mario + other entities)
+marioOverlap:		; top of stack should hold 4 character starting locations, top left, top right, bottom left and bottom right collision chars (-$1D00)
+	ldy #0
+overlapInitLoop:		; puts just mario into overlap char memory
+	lda $1DE0,Y
+	sta $1D38,Y
+	lda $1DF0,Y
+	sta $1D50,Y
+	lda $1D40,Y
+	sta $1D78,Y
+	lda $1D48,Y
+	sta $1DE8,Y
+	iny
+	cpy #8
+	bne overlapInitLoop	; after this have mario only in collision char memory
+	lda #0
+	pha					; start with 0 (iteration number for overlapCharLoop1) on top of stack
+overlapCharLoop1:
+	pla					; get iteration number
 	tay
-	dey			; Y = X-1
-down1Loop2:
-	lda GRAPHSTART1,Y	; load at X-1
-	sta GRAPHSTART1,X ; store at X
-	dex			; decrement to move to next line up
+	pla					; get next char to do overlap with
+	tax
+	iny
+	tya
+	pha					; store next iteration number
 	dey
 	tya
-	and #7		; stop looping when last 3 bits of x are 0
-	bne down1Loop2
-	lda GRAPHSTART1,Y	; load at X-1
-	sta GRAPHSTART1,X ; store at X
-	dex
-	pla
-	sta GRAPHSTART1,X
-
-
+	cmp #0
+	bne overlapCheck2
+	ldy #$38
+	jmp overlapCharLoop2
+overlapCheck2:
+	cmp #1
+	bne overlapCheck3
+	ldy #$50
+	jmp overlapCharLoop2
+overlapCheck3:
+	cmp #2
+	bne overlapCheck4
+	ldy #$78
+	jmp overlapCharLoop2
+overlapCheck4:
+	cmp #3
+	bne getKeyInput
+	ldy #$E8
+overlapCharLoop2:
+	lda $1D00,X			; row of pixels of overlap char	
+	; and $1D00,Y			; bitwise and with mario
+	; cmp #0
+	; set memory location triggering collision / branch to collision code
+	ora $1D00,Y			; bitwise or with mario
+	sta $1D00,Y			; store new overlapped mario image
+	inx
+	cpx #8
+	bne overlapCharLoop2
+	jmp overlapCharLoop1
+	
 	
 getKeyInput:
 	lda #0
 	jsr	CHRIN
 	cmp #'W		; if w pressed 
-	beq moveMyChar
+	beq jmpMoveMyChar
 	jmp getKeyInput
 	
 donePrg:
@@ -239,7 +277,6 @@ donePrg:
 
 chars:
 	.byte "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[] !", '", "#$%&'()*+,-./0123456789:;<=>?", 0	;note first 8 characters are replaced by custom ones
-	
 
 
 
